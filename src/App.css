@@ -246,6 +246,18 @@
     z-index: -2;
   }
 
+  .hero-body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: radial-gradient(circle at 50% 0%, rgba(197, 168, 128, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
   .hero-overlay {
     position: absolute;
     top: 0;
@@ -462,12 +474,14 @@
     font-size: 1.1rem;
     margin-bottom: 1.5rem;
     color: var(--color-text);
+    text-align: justify;
   }
   .tea-subtitle {
     font-size: 1.1rem;
     color: var(--color-text-muted);
     margin-top: 1rem;
     line-height: 1.6;
+    text-align: justify;
   }
   .tea-tip-box {
     background: var(--color-surface);
@@ -489,6 +503,7 @@
     font-size: 0.95rem;
     line-height: 1.6;
     color: var(--color-text-muted);
+    text-align: justify;
   }
   .tea-tools-grid {
     display: grid;
@@ -512,6 +527,7 @@
     margin: 0;
     line-height: 1.6;
     color: var(--color-text-muted);
+    text-align: justify;
   }
   .tea-table-wrapper {
     overflow-x: auto;
@@ -557,6 +573,7 @@
     line-height: 1.8;
     font-size: 1.1rem;
     color: var(--color-text-muted);
+    text-align: justify;
   }
 
   @media (max-width: 768px) {
@@ -564,7 +581,7 @@
       padding: 0 1rem;
     }
     .tea-route-container {
-      padding-top: 80px;
+      padding-top: 120px;
       padding-bottom: 2rem;
     }
     .tea-route-header {
@@ -586,6 +603,7 @@
     }
     .tea-hero-subtitle {
       font-size: 1rem;
+      text-align: justify;
     }
     .tea-chapter-title, .tea-closing-title {
       font-size: 1.6rem;
@@ -602,8 +620,32 @@
     .tea-tool-card {
       padding: 1rem;
     }
-    .tea-table th, .tea-table td {
-      padding: 0.75rem 0.5rem;
-      font-size: 0.85rem;
+    
+    /* Table stacked responsive layout */
+    .tea-table, .tea-table tbody, .tea-table tr, .tea-table td, .tea-table th {
+      display: block;
+      width: 100%;
+    }
+    .tea-table thead {
+      display: none;
+    }
+    .tea-table tr {
+      margin-bottom: 1rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      padding: 1rem;
+    }
+    .tea-table td {
+      padding: 0.5rem 0;
+      border-bottom: none;
+      text-align: center;
+    }
+    .tea-table-strong {
+      font-size: 1.2rem;
+      color: var(--color-primary);
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 0.5rem !important;
+      margin-bottom: 0.5rem;
     }
   }
