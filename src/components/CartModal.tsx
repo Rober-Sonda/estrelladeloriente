@@ -1,0 +1,174 @@
+import React from 'react';
+import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
+import { useCart } from '../CartContext';
+
+interface CartModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
+  const { items, updateQuantity, removeFromCart, total, clearCart } = useCart();
+
+  if (!isOpen) return null;
+
+  const handleCheckout = () => {
+    if (items.length === 0) return;
+
+    let message = `Hola! Vengo desde la página de Estrella del Oriente y quisiera realizar el siguiente pedido:%0A%0A`;
+    
+    items.forEach(item => {
+      message += `- ${item.quantity}x ${item.name} ($${(item.price * item.quantity).toLocaleString('es-AR')})%0A`;
+      if (item.customBlendDetails) {
+        message += `  Base: ${item.customBlendDetails.base}%0A`;
+        message += `  Ingredientes: ${item.customBlendDetails.ingredients.join(', ')}%0A`;
+      }
+      if (item.customBoxDetails) {
+        message += `  Caja: ${item.customBoxDetails.boxType}%0A`;
+        message += `  Contiene: ${item.customBoxDetails.items.map(i => i.name).join(', ')}%0A`;
+      }
+    });
+    
+    message += `%0A*Total: $${total.toLocaleString('es-AR')}*%0A%0A`;
+    message += `¿Me podrían confirmar si tienen stock y cómo coordinamos el pago/envío? Muchas gracias!`;
+
+    const whatsappUrl = `https://wa.me/5492317472432?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+    clearCart();
+    onClose();
+  };
+
+  return (
+    <div style={overlayStyle} onClick={onClose}>
+      <div style={modalStyle} onClick={e => e.stopPropagation()} className="glass-panel">
+        <div style={headerStyle}>
+          <h2 style={{ fontFamily: 'var(--font-heading)', margin: 0 }}>Tu Pedido</h2>
+          <button onClick={onClose} className="icon-btn"><X /></button>
+        </div>
+
+        <div style={contentStyle}>
+          {items.length === 0 ? (
+            <div className="text-center" style={{ padding: '3rem 0', color: 'var(--color-text-muted)' }}>
+              <ShoppingBag size={48} style={{ opacity: 0.5, marginBottom: '1rem' }} />
+              <p>Tu carrito está vacío.</p>
+            </div>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0 }}>
+              {items.map(item => (
+                <li key={item.cartItemId} style={itemStyle}>
+                  <img src={item.image} alt={item.name} style={imgStyle} />
+                  <div style={{ flexGrow: 1 }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>{item.name}</h4>
+                    {item.customBlendDetails && <span style={{fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.2rem'}}>Base: {item.customBlendDetails.base}</span>}
+                    {item.customBoxDetails && <span style={{fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginBottom: '0.2rem'}}>{item.customBoxDetails.items.length} items seleccionados</span>}
+                    <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--color-primary)' }}>
+                      ${item.price.toLocaleString('es-AR')}
+                    </p>
+                  </div>
+                  <div style={quantityStyle}>
+                    <button onClick={() => updateQuantity(item.cartItemId, item.quantity - 1)} style={qBtnStyle}><Minus size={14}/></button>
+                    <span>{item.quantity}</span>
+                    <button onClick={() => updateQuantity(item.cartItemId, item.quantity + 1)} style={qBtnStyle}><Plus size={14}/></button>
+                  </div>
+                  <button onClick={() => removeFromCart(item.cartItemId)} className="icon-btn" style={{ color: 'var(--color-text-muted)' }}>
+                    <X size={18} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {items.length > 0 && (
+          <div style={footerStyle}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
+              <span>Total:</span>
+              <span>${total.toLocaleString('es-AR')}</span>
+            </div>
+            <button className="btn btn-primary" style={{ width: '100%', padding: '1rem' }} onClick={handleCheckout}>
+              Pedir por WhatsApp
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Inline styles for modal
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  width: '100vw',
+  height: '100vh',
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  backdropFilter: 'blur(4px)',
+  zIndex: 2000,
+  display: 'flex',
+  justifyContent: 'flex-end'
+};
+
+const modalStyle: React.CSSProperties = {
+  width: '100%',
+  maxWidth: '400px',
+  height: '100%',
+  backgroundColor: 'var(--color-surface)',
+  display: 'flex',
+  flexDirection: 'column',
+  boxShadow: '-4px 0 24px rgba(0,0,0,0.1)'
+};
+
+const headerStyle: React.CSSProperties = {
+  padding: '1.5rem',
+  borderBottom: '1px solid var(--color-border)',
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center'
+};
+
+const contentStyle: React.CSSProperties = {
+  flexGrow: 1,
+  overflowY: 'auto',
+  padding: '1.5rem'
+};
+
+const footerStyle: React.CSSProperties = {
+  padding: '1.5rem',
+  borderTop: '1px solid var(--color-border)',
+  backgroundColor: 'var(--color-bg-alt)'
+};
+
+const itemStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '1rem',
+  marginBottom: '1.5rem',
+  paddingBottom: '1.5rem',
+  borderBottom: '1px solid var(--color-border)'
+};
+
+const imgStyle: React.CSSProperties = {
+  width: '60px',
+  height: '60px',
+  objectFit: 'cover',
+  borderRadius: 'var(--radius-sm)'
+};
+
+const quantityStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--radius-sm)',
+  padding: '0.2rem 0.5rem'
+};
+
+const qBtnStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '0.2rem',
+  color: 'var(--color-text)',
+  cursor: 'pointer'
+};
