@@ -1,5 +1,5 @@
 import React from 'react';
-import { Leaf, Sparkles, Droplets, Zap, Flame, Globe, Coffee, BookOpen, FlaskConical, Thermometer, ShieldAlert, Package } from 'lucide-react';
+import { Leaf, Sparkles, Droplets, Zap, Flame, Globe, Coffee, BookOpen, FlaskConical, Thermometer, ShieldAlert, Package, Heart } from 'lucide-react';
 
 export const TeaRoute: React.FC = () => {
   return (
