@@ -2,15 +2,15 @@ import React from 'react';
 
 export const TeaRoute: React.FC = () => {
   return (
-    <div className="container" style={{ paddingTop: '100px', paddingBottom: '4rem' }}>
-      <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+    <div className="container tea-route-container">
+      <div className="tea-route-header">
         <h1 className="section-title" style={{ marginBottom: '1rem', fontSize: '3rem' }}>El Camino de la Hebra</h1>
         <p style={{ color: 'var(--color-text-muted)', fontSize: '1.2rem', maxWidth: '800px', margin: '0 auto', lineHeight: 1.8 }}>
           Bienvenido a la guía definitiva para amantes del té. Un viaje donde la historia de las dinastías antiguas se entrelaza con la ciencia moderna, y donde las leyendas milenarias se convierten en consejos prácticos para que prepares la taza perfecta en la comodidad de tu hogar.
         </p>
       </div>
 
-      <div style={{ display: 'grid', gap: '4rem', maxWidth: '1000px', margin: '0 auto' }}>
+      <div className="tea-route-grid">
         
         {/* Capítulo 1: El Origen */}
         <div className="glass-panel chapter-panel" style={{ borderRadius: 'var(--radius-lg)' }}>

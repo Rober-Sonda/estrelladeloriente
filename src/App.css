@@ -405,13 +405,38 @@
   }
 
   /* Tea Route Mobile Responsive */
+  .tea-route-container {
+    padding-top: 100px;
+    padding-bottom: 4rem;
+  }
+  .tea-route-header {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+  .tea-route-grid {
+    display: grid;
+    gap: 4rem;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
   .chapter-panel {
     padding: 3rem;
   }
   .chapter-panel-final {
     padding: 4rem 3rem;
   }
+
   @media (max-width: 768px) {
+    .tea-route-container {
+      padding-top: 80px;
+      padding-bottom: 2rem;
+    }
+    .tea-route-header {
+      margin-bottom: 2rem;
+    }
+    .tea-route-grid {
+      gap: 2rem;
+    }
     .chapter-panel {
       padding: 1.5rem;
     }
@@ -420,8 +445,5 @@
     }
     .section-title {
       font-size: 2.2rem !important;
-    }
-    .container {
-      padding-top: 80px !important;
     }
   }
