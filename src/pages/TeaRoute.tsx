@@ -13,9 +13,9 @@ export const TeaRoute: React.FC = () => {
       <div style={{ display: 'grid', gap: '4rem', maxWidth: '1000px', margin: '0 auto' }}>
         
         {/* Capítulo 1: El Origen */}
-        <div className="glass-panel" style={{ padding: '3rem', borderRadius: 'var(--radius-lg)' }}>
+        <div className="glass-panel chapter-panel" style={{ borderRadius: 'var(--radius-lg)' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', tracking: '2px', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO I</span>
+            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO I</span>
             <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-primary)' }}>
               El Accidente que Cambió el Mundo
             </h2>
@@ -32,9 +32,9 @@ export const TeaRoute: React.FC = () => {
         </div>
 
         {/* Capítulo 2: El Agua */}
-        <div className="glass-panel" style={{ padding: '3rem', borderRadius: 'var(--radius-lg)' }}>
+        <div className="glass-panel chapter-panel" style={{ borderRadius: 'var(--radius-lg)' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', tracking: '2px', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO II</span>
+            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO II</span>
             <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-primary)' }}>
               La Madre del Té (El Agua)
             </h2>
@@ -54,9 +54,9 @@ export const TeaRoute: React.FC = () => {
         </div>
 
         {/* Capítulo 3: Almacenamiento */}
-        <div className="glass-panel" style={{ padding: '3rem', borderRadius: 'var(--radius-lg)' }}>
+        <div className="glass-panel chapter-panel" style={{ borderRadius: 'var(--radius-lg)' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', tracking: '2px', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO III</span>
+            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO III</span>
             <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-primary)' }}>
               La Ruta de la Seda y la Conservación
             </h2>
@@ -75,9 +75,9 @@ export const TeaRoute: React.FC = () => {
         </div>
 
         {/* Capítulo 4: Las Teteras */}
-        <div className="glass-panel" style={{ padding: '3rem', borderRadius: 'var(--radius-lg)' }}>
+        <div className="glass-panel chapter-panel" style={{ borderRadius: 'var(--radius-lg)' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', tracking: '2px', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO IV</span>
+            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO IV</span>
             <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-primary)' }}>
               Las Herramientas del Alquimista
             </h2>
@@ -102,9 +102,9 @@ export const TeaRoute: React.FC = () => {
         </div>
 
         {/* Capítulo 5: Guía Definitiva de Preparación */}
-        <div className="glass-panel" style={{ padding: '3rem', borderRadius: 'var(--radius-lg)' }}>
+        <div className="glass-panel chapter-panel" style={{ borderRadius: 'var(--radius-lg)' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', tracking: '2px', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO V</span>
+            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO V</span>
             <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-primary)' }}>
               La Regla de Oro (Tiempos y Temperaturas)
             </h2>
@@ -169,9 +169,9 @@ export const TeaRoute: React.FC = () => {
         </div>
 
         {/* Capítulo 6: La Química y el Mindfulness */}
-        <div className="glass-panel" style={{ padding: '3rem', borderRadius: 'var(--radius-lg)' }}>
+        <div className="glass-panel chapter-panel" style={{ borderRadius: 'var(--radius-lg)' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', tracking: '2px', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO VI</span>
+            <span style={{ display: 'block', fontSize: '0.9rem', textTransform: 'uppercase', color: 'var(--color-secondary)', marginBottom: '0.5rem', letterSpacing: '2px' }}>CAPÍTULO VI</span>
             <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-primary)' }}>
               La Química de la Calma
             </h2>
@@ -191,7 +191,7 @@ export const TeaRoute: React.FC = () => {
         </div>
 
         {/* Cierre */}
-        <div className="glass-panel" style={{ padding: '4rem 3rem', borderRadius: 'var(--radius-lg)', textAlign: 'center', marginTop: '2rem' }}>
+        <div className="glass-panel chapter-panel chapter-panel-final" style={{ borderRadius: 'var(--radius-lg)', textAlign: 'center', marginTop: '2rem' }}>
           <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-primary)', marginBottom: '1.5rem' }}>
             Tu Próxima Taza te Espera
           </h2>
