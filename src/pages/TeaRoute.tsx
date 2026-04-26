@@ -1,5 +1,5 @@
 import React from 'react';
-import { Leaf, Sparkles, Droplets, Zap, Flame, Globe, Coffee, BookOpen, FlaskConical, Thermometer, ShieldAlert, Package, Mug } from 'lucide-react';
+import { Leaf, Sparkles, Droplets, Zap, Flame, Globe, Coffee, BookOpen, FlaskConical, Thermometer, ShieldAlert, Package } from 'lucide-react';
 
 export const TeaRoute: React.FC = () => {
   return (
@@ -78,7 +78,7 @@ export const TeaRoute: React.FC = () => {
         {/* Capítulo 4: Las Teteras */}
         <div className="glass-panel" style={{ padding: '3rem', borderRadius: 'var(--radius-lg)' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <Mug size={40} style={{ color: 'var(--color-primary)', margin: '0 auto 1rem' }} />
+            <Coffee size={40} style={{ color: 'var(--color-primary)', margin: '0 auto 1rem' }} />
             <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-primary)' }}>
               Capítulo IV: Las Herramientas del Alquimista
             </h2>
