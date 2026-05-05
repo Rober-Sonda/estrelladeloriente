@@ -1,0 +1,147 @@
+﻿/* Top Filter Bar Styles */
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: none;
+  border-bottom: 2px solid rgba(197, 168, 128, 0.3);
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+[data-theme='dark'] .search-input {
+  color: var(--color-secondary);
+}
+
+.search-input::placeholder {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.search-input:focus {
+  outline: none;
+  border-bottom-color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+[data-theme='dark'] .search-input:focus {
+  border-bottom-color: var(--color-secondary);
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Active Filter Tags */
+.active-filter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+[data-theme='dark'] .active-filter-tag {
+  background: var(--color-secondary);
+  color: #121C17;
+}
+
+.active-filter-tag button {
+  color: inherit;
+  font-size: 1rem;
+  opacity: 0.7;
+  transition: opacity var(--transition-fast);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.active-filter-tag button:hover {
+  opacity: 1;
+}
+
+/* Filter Toggle Button */
+.filter-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid rgba(197, 168, 128, 0.3);
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  color: var(--color-primary);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+[data-theme='dark'] .filter-toggle-btn {
+  background-color: rgba(30, 46, 37, 0.5);
+  color: var(--color-secondary);
+}
+
+.filter-toggle-btn:hover, .filter-toggle-btn.active {
+  background-color: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+[data-theme='dark'] .filter-toggle-btn:hover, [data-theme='dark'] .filter-toggle-btn.active {
+  background-color: var(--color-secondary);
+  color: #121C17;
+  border-color: var(--color-secondary);
+}
+
+/* Filter Panel & Chips */
+.filter-panel {
+  padding: 1.5rem;
+  border-top: 1px solid rgba(197, 168, 128, 0.2);
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+.filter-chip {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.filter-chip:hover, .filter-chip.active {
+  background: var(--color-bg-alt);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+[data-theme='dark'] .filter-chip:hover, [data-theme='dark'] .filter-chip.active {
+  color: var(--color-secondary);
+  border-color: var(--color-secondary);
+}
+@media (max-width: 768px) {
+  .admin-layout {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+
+

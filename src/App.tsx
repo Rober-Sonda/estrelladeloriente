@@ -7,6 +7,8 @@ import { Catalog } from './pages/Catalog';
 import { TeaRoute } from './pages/TeaRoute';
 import { CustomBlend } from './pages/CustomBlend';
 import { CustomBox } from './pages/CustomBox';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminRoute } from './components/AdminRoute';
 import './App.css';
 
 function App() {
@@ -20,6 +22,7 @@ function App() {
           <Route path="/ruta-del-te" element={<TeaRoute />} />
           <Route path="/crea-tu-blend" element={<CustomBlend />} />
           <Route path="/arma-tu-box" element={<CustomBox />} />
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         </Routes>
       </main>
       <Footer />

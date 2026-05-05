@@ -2,201 +2,160 @@ import React from 'react';
 
 export const TeaRoute: React.FC = () => {
   return (
-    <div className="container tea-route-container">
-      <div className="tea-route-header">
-        <h1 className="tea-hero-title">El Camino de la Hebra</h1>
-        <p className="tea-hero-subtitle">
-          Bienvenido a la guía definitiva para amantes del té. Un viaje donde la historia de las dinastías antiguas se entrelaza con la ciencia moderna, y donde las leyendas milenarias se convierten en consejos prácticos para que prepares la taza perfecta en la comodidad de tu hogar.
+    <div className="container tea-route-container" style={{ paddingBottom: '5rem' }}>
+      <div className="tea-route-header" style={{ textAlign: 'center', marginBottom: '5rem', marginTop: '3rem' }}>
+        <h1 className="tea-hero-title" style={{ fontSize: '3.5rem', color: 'var(--color-primary)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '1.5rem' }}>
+          La Ruta Histórica del Té
+        </h1>
+        <p className="tea-hero-subtitle" style={{ fontSize: '1.25rem', color: 'var(--color-text-muted)', maxWidth: '850px', margin: '0 auto', lineHeight: '1.8' }}>
+          Un viaje inmersivo a través de cinco milenios. Descubre cómo unas humildes hojas silvestres arrastradas por el viento transformaron la medicina antigua, impulsaron la filosofía Zen, moldearon imperios y se convirtieron en la segunda bebida más consumida de la humanidad.
         </p>
       </div>
 
-      <div className="tea-route-grid">
+      <div className="timeline" style={{ position: 'relative', maxWidth: '950px', margin: '0 auto' }}>
         
-        {/* Capítulo 1: El Origen */}
-        <div className="glass-panel chapter-panel">
-          <div className="chapter-header">
-            <span className="chapter-number">CAPÍTULO I</span>
-            <h2 className="tea-chapter-title">
-              El Accidente que Cambió el Mundo
-            </h2>
-          </div>
-          <p className="tea-text">
-            Año 2737 a.C. El emperador chino Shen Nong, un erudito obsesionado con la higiene, ordenaba hervir el agua antes de beberla. Mientras descansaba bajo un árbol silvestre, una brisa arrastró unas hojas hacia su olla hirviendo. Al beber el agua dorada, experimentó una claridad mental asombrosa. Acababa de nacer el té (proveniente de la planta <em>Camellia sinensis</em>).
+        {/* Timeline Item 1 */}
+        <div className="timeline-item glass-panel" style={{ padding: '2.5rem', marginBottom: '4rem', borderRadius: 'var(--radius-lg)', borderLeft: '5px solid var(--color-secondary)' }}>
+          <div className="timeline-date" style={{ color: 'var(--color-secondary)', fontWeight: '700', fontSize: '1.4rem', marginBottom: '0.5rem', letterSpacing: '1px' }}>2737 a.C.</div>
+          <h2 className="tea-chapter-title" style={{ color: 'var(--color-primary)', marginBottom: '1rem', fontSize: '2rem' }}>El Nacimiento Mítico y la Alquimia de Shen Nong</h2>
+          <p className="tea-text" style={{ fontSize: '1.1rem', lineHeight: '1.7', marginBottom: '1.5rem' }}>
+            La historia del té no comienza en una cocina, sino en el reino de la medicina primitiva. Según la leyenda, el emperador chino Shen Nong, el mítico "Granjero Divino" y padre de la medicina tradicional, ordenaba hervir toda el agua antes de beberla para evitar enfermedades. Un día, mientras descansaba bajo un árbol de <em>Camellia sinensis</em> silvestre, una ráfaga de viento arrastró unas cuantas hojas hacia su caldero de agua hirviendo. Al notar el aroma y beber la infusión dorada, el emperador sintió cómo una energía pura y una claridad mental asombrosa recorrían su cuerpo. Durante siglos, el té fue consumido exclusivamente masticando la hoja o hirviéndola con cebolla, jengibre y especias como una potente medicina curativa.
           </p>
-          <div className="tea-tip-box">
-            <h4 className="tea-tip-title">Tip Práctico: Despierta tus Sentidos</h4>
-            <p className="tea-tip-text">
-              Tal como hizo el emperador, el primer paso antes de tomar té es <strong>observar y oler</strong>. Antes de infundir las hebras, huélelas en seco. Luego, calienta tu taza vacía con agua caliente, vacíala, coloca las hebras dentro y vuelve a oler. Verás cómo el calor de la taza "despierta" los aceites esenciales de la hebra seca, revelando aromas a cacao, flores o bosque húmedo que antes estaban ocultos.
+          <div className="tea-tip-box" style={{ background: 'rgba(197, 168, 128, 0.08)', border: '1px solid var(--color-secondary)', borderRadius: 'var(--radius-md)', padding: '1.5rem' }}>
+            <h4 className="tea-tip-title" style={{ color: 'var(--color-secondary)', fontSize: '1.2rem', marginBottom: '0.5rem' }}>El Secreto del Ritual: El Despertar de la Hoja</h4>
+            <p className="tea-tip-text" style={{ fontSize: '1rem', margin: 0, color: 'var(--color-text-muted)' }}>
+              Antes de añadir agua a tus hebras, <strong>siempre calienta tu tetera o taza vacía</strong> con un poco de agua caliente y luego deséchala. Coloca tus hebras secas en la tetera tibia, ponles la tapa unos segundos y luego destapa para olerlas. Este choque de calor "despierta" los aceites esenciales latentes en la hebra seca, revelando aromas a cacao, orquídeas o miel que pasarías por alto si solo arrojaras el agua directamente.
             </p>
           </div>
         </div>
 
-        {/* Capítulo 2: El Agua */}
-        <div className="glass-panel chapter-panel">
-          <div className="chapter-header">
-            <span className="chapter-number">CAPÍTULO II</span>
-            <h2 className="tea-chapter-title">
-              La Madre del Té (El Agua)
-            </h2>
-          </div>
-          <p className="tea-text">
-            El famoso maestro chino Lu Yu, autor del primer libro sobre el té en el siglo VIII ("El Clásico del Té"), decía que <em>"el agua de manantial de montaña es la mejor, el agua de río es mediocre, y el agua de pozo es la peor"</em>. En la antigüedad, los maestros viajaban semanas enteras solo para recolectar agua del deshielo para sus ceremonias.
+        {/* Timeline Item 2 */}
+        <div className="timeline-item glass-panel" style={{ padding: '2.5rem', marginBottom: '4rem', borderRadius: 'var(--radius-lg)', borderLeft: '5px solid var(--color-secondary)' }}>
+          <div className="timeline-date" style={{ color: 'var(--color-secondary)', fontWeight: '700', fontSize: '1.4rem', marginBottom: '0.5rem', letterSpacing: '1px' }}>Dinastía Tang (618-907 d.C.)</div>
+          <h2 className="tea-chapter-title" style={{ color: 'var(--color-primary)', marginBottom: '1rem', fontSize: '2rem' }}>La Era Clásica y "El Clásico del Té"</h2>
+          <p className="tea-text" style={{ fontSize: '1.1rem', lineHeight: '1.7', marginBottom: '1.5rem' }}>
+            Bajo el reinado de la Dinastía Tang, el té se separó de la sopa medicinal y se elevó a la categoría de arte supremo. El erudito y poeta <strong>Lu Yu</strong>, un huérfano criado por monjes budistas, dedicó su vida a documentar cada detalle de esta planta y escribió el <em>"Cha Jing"</em> (El Clásico del Té). Lu Yu detestaba las mezclas con cebolla y especias; él enseñó a hervir ladrillos de té triturados únicamente con una pizca de sal. Además, codificó por primera vez qué tipo de leña usar, qué vasijas de porcelana realzaban el color de la bebida, y, lo más importante, definió la calidad del agua como el alma del té.
           </p>
-          <p className="tea-text">
-            La química nos da la razón: una taza de té es 99% agua. Si el agua tiene demasiado cloro o minerales pesados (agua dura), los componentes del té no pueden disolverse correctamente y la infusión queda "opaca" y plana.
-          </p>
-          <div className="tea-tip-box">
-            <h4 className="tea-tip-title">Tip Práctico: Nunca hiervas el agua dos veces</h4>
-            <p className="tea-tip-text">
-              Usa siempre agua filtrada o mineral de mineralización débil. Y un secreto milenario: <strong>no sobre-hiervas el agua ni la hiervas dos veces</strong>. Al hervir demasiado, el agua pierde el oxígeno disuelto. Las hebras de té necesitan ese oxígeno para "respirar" y expandir sus aromas en la taza. Calienta el agua solo hasta la temperatura que necesites.
+          <div className="tea-tip-box" style={{ background: 'rgba(197, 168, 128, 0.08)', border: '1px solid var(--color-secondary)', borderRadius: 'var(--radius-md)', padding: '1.5rem' }}>
+            <h4 className="tea-tip-title" style={{ color: 'var(--color-secondary)', fontSize: '1.2rem', marginBottom: '0.5rem' }}>El Secreto del Alquimista: El Espíritu del Agua</h4>
+            <p className="tea-tip-text" style={{ fontSize: '1rem', margin: 0, color: 'var(--color-text-muted)' }}>
+              Lu Yu escribió que el agua que hierve demasiado tiempo es "agua muerta". <strong>Nunca vuelvas a hervir agua que ya se ha enfriado</strong>. Al sobre-hervir, eliminas todo el oxígeno disuelto en el agua. Las hebras de té necesitan oxígeno para que los compuestos aromáticos puedan adherirse y "florecer" en tu taza. Usa siempre agua fresca, fría y filtrada, y caliéntala solo hasta la temperatura que necesitas.
             </p>
           </div>
         </div>
 
-        {/* Capítulo 3: Almacenamiento */}
-        <div className="glass-panel chapter-panel">
-          <div className="chapter-header">
-            <span className="chapter-number">CAPÍTULO III</span>
-            <h2 className="tea-chapter-title">
-              La Ruta de la Seda y la Conservación
-            </h2>
-          </div>
-          <p className="tea-text">
-            Cuando el té comenzó a exportarse a través de la Ruta de la Seda y en los largos viajes en barco de la Compañía de las Indias Orientales, la frescura era un problema. Para sobrevivir meses a lomo de camello o en bodegas marinas, los chinos desarrollaron técnicas como oxidar completamente el té (Té Negro) o comprimirlo en discos duros como rocas (Té Pu-erh) para protegerlo de la humedad.
+        {/* Timeline Item 3 */}
+        <div className="timeline-item glass-panel" style={{ padding: '2.5rem', marginBottom: '4rem', borderRadius: 'var(--radius-lg)', borderLeft: '5px solid var(--color-secondary)' }}>
+          <div className="timeline-date" style={{ color: 'var(--color-secondary)', fontWeight: '700', fontSize: '1.4rem', marginBottom: '0.5rem', letterSpacing: '1px' }}>Dinastía Song (960-1279 d.C.)</div>
+          <h2 className="tea-chapter-title" style={{ color: 'var(--color-primary)', marginBottom: '1rem', fontSize: '2rem' }}>La Edad Romántica del Polvo y el Zen</h2>
+          <p className="tea-text" style={{ fontSize: '1.1rem', lineHeight: '1.7', marginBottom: '1.5rem' }}>
+            La estética de los Song favoreció la delicadeza. El té hervido pasó de moda. En su lugar, las mejores hojas se molían meticulosamente con piedras de molino hasta obtener un polvo verde esmeralda. Este polvo se colocaba en un tazón de cerámica oscura y se batía con agua caliente utilizando un batidor de bambú, creando una espuma espesa que se asemejaba a las nubes. Los monjes budistas Zen adoptaron esta práctica para mantenerse despiertos durante largas horas de meditación profunda, y posteriormente la llevaron a Japón, donde evolucionó en la rígida y hermosa <strong>Ceremonia del Té Japonesa (Chanoyu)</strong> y el consumo moderno de Té Matcha.
           </p>
-          <div className="tea-tip-box">
-            <h4 className="tea-tip-title">Tip Práctico: Los 4 Enemigos del Té en tu Cocina</h4>
-            <p className="tea-tip-text">
-              El té es como una esponja; absorbe todo lo que lo rodea. Sus 4 grandes enemigos son: <strong>Luz, Oxígeno, Humedad y Olores</strong>.
-              <br/><br/>
-              <em>¿Qué debes hacer?</em> Nunca guardes tu té en frascos de cristal transparente si van a estar expuestos al sol, ni lo pongas en el mismo estante que tus especias, café o ajos. Guárdalo en latas herméticas u oscuras, en un lugar fresco y seco.
+          <div className="tea-tip-box" style={{ background: 'rgba(197, 168, 128, 0.08)', border: '1px solid var(--color-secondary)', borderRadius: 'var(--radius-md)', padding: '1.5rem' }}>
+            <h4 className="tea-tip-title" style={{ color: 'var(--color-secondary)', fontSize: '1.2rem', marginBottom: '0.5rem' }}>El Secreto del Monje: La Química de la Calma</h4>
+            <p className="tea-tip-text" style={{ fontSize: '1rem', margin: 0, color: 'var(--color-text-muted)' }}>
+              A diferencia del café, el té verde y blanco no te dan "nerviosismo". Esto se debe a un aminoácido exclusivo del té llamado <strong>L-Teanina</strong>. Para extraer la máxima L-Teanina (que genera ondas Alfa cerebrales de calma y concentración) sin extraer taninos amargos, <strong>infusiona tu té verde a exactamente 75°C por no más de 2 minutos</strong>. Lograrás la misma calma enfocada que buscaban los monjes en sus templos.
             </p>
           </div>
         </div>
 
-        {/* Capítulo 4: Las Teteras */}
-        <div className="glass-panel chapter-panel">
-          <div className="chapter-header">
-            <span className="chapter-number">CAPÍTULO IV</span>
-            <h2 className="tea-chapter-title">
-              Las Herramientas del Alquimista
-            </h2>
-          </div>
-          <p className="tea-text">
-            A lo largo de los siglos, el recipiente donde se preparaba el té fue evolucionando. En China, los eruditos descubrieron la arcilla porosa de <em>Yixing</em>, cuyas teteras absorbían los aceites del té con el tiempo, haciendo que cada preparación fuera mejor que la anterior. Al llegar a Europa, la realeza comenzó a usar fina porcelana para demostrar su estatus, ya que la porcelana no retenía olores y permitía probar diferentes blends.
+        {/* Timeline Item 4 */}
+        <div className="timeline-item glass-panel" style={{ padding: '2.5rem', marginBottom: '4rem', borderRadius: 'var(--radius-lg)', borderLeft: '5px solid var(--color-secondary)' }}>
+          <div className="timeline-date" style={{ color: 'var(--color-secondary)', fontWeight: '700', fontSize: '1.4rem', marginBottom: '0.5rem', letterSpacing: '1px' }}>Dinastía Ming (1368-1644 d.C.)</div>
+          <h2 className="tea-chapter-title" style={{ color: 'var(--color-primary)', marginBottom: '1rem', fontSize: '2rem' }}>La Revolución de la Hebra y la Tetera de Yixing</h2>
+          <p className="tea-text" style={{ fontSize: '1.1rem', lineHeight: '1.7', marginBottom: '1.5rem' }}>
+            El primer emperador Ming, de orígenes campesinos, abolió por decreto imperial la producción de té prensado y en polvo, por considerar que el proceso era agotador y opresivo para los agricultores. Ordenó que todos los tributos se pagaran en <strong>hojas sueltas</strong> enteras. Esta simple ley cambió el mundo: de pronto, ya no se podía batir el té. Hubo que inventar un nuevo recipiente para remojar las hojas en agua caliente y luego colarlas. Así nacieron las primeras <strong>teteras de arcilla porosa de Yixing</strong>, creando el método de infusión que usamos hasta el día de hoy.
           </p>
-          <div className="tea-tools-grid">
-            <div className="tea-tool-card">
-              <h4 className="tea-tool-title">Teteras de Vidrio</h4>
-              <p className="tea-tool-text">Son espectaculares para Tés Verdes, Blancos o Blends con flores. El vidrio no guarda olores y te permite disfrutar del "espectáculo visual" de ver cómo las hebras bailan y se despliegan ("La Agonía de la Hoja").</p>
-            </div>
-            <div className="tea-tool-card">
-              <h4 className="tea-tool-title">Teteras de Hierro Fundido</h4>
-              <p className="tea-tool-text">Originarias de Japón (<em>Tetsubin</em>). Retienen el calor de forma impresionante. Son ideales para Tés Negros, Rojos u Oolongs muy oxidados que necesitan mantener una temperatura alta durante toda la infusión.</p>
-            </div>
-            <div className="tea-tool-card">
-              <h4 className="tea-tool-title">Infusores de Metal/Silicona</h4>
-              <p className="tea-tool-text">La solución moderna. <strong>Tip clave:</strong> Asegúrate de que el infusor sea lo suficientemente grande. Si aprisionas el té en una bolita muy pequeña, el agua no podrá circular entre las hojas y tu infusión quedará aguada.</p>
-            </div>
+          <div className="tea-tip-box" style={{ background: 'rgba(197, 168, 128, 0.08)', border: '1px solid var(--color-secondary)', borderRadius: 'var(--radius-md)', padding: '1.5rem' }}>
+            <h4 className="tea-tip-title" style={{ color: 'var(--color-secondary)', fontSize: '1.2rem', marginBottom: '0.5rem' }}>El Secreto del Espacio: La Agonía de la Hoja</h4>
+            <p className="tea-tip-text" style={{ fontSize: '1rem', margin: 0, color: 'var(--color-text-muted)' }}>
+              Las hojas de té premium se enrollan a mano y pueden expandirse hasta 5 veces su tamaño en el agua. Este hermoso proceso visual se conoce poéticamente como "La Agonía de la Hoja". <strong>Jamás utilices infusores de bolita metálica pequeños.</strong> Al aprisionar la hebra, el agua no puede circular a través de ella, resultando en una taza aguada y plana. Dales espacio; usa infusores de canasta anchos o deja las hebras libres en la tetera.
+            </p>
           </div>
         </div>
 
-        {/* Capítulo 5: Guía Definitiva de Preparación */}
-        <div className="glass-panel chapter-panel">
-          <div className="chapter-header">
-            <span className="chapter-number">CAPÍTULO V</span>
-            <h2 className="tea-chapter-title">
-              La Regla de Oro (Tiempos y Temperaturas)
-            </h2>
-            <p className="tea-subtitle">
-              De una misma planta (Camellia sinensis) logramos colores y sabores radicalmente diferentes solo alterando su proceso de secado y oxidación. Pero <strong>todo este trabajo del agricultor se arruina si preparas el té mal en casa.</strong>
+        {/* Timeline Item 5 */}
+        <div className="timeline-item glass-panel" style={{ padding: '2.5rem', marginBottom: '4rem', borderRadius: 'var(--radius-lg)', borderLeft: '5px solid var(--color-secondary)' }}>
+          <div className="timeline-date" style={{ color: 'var(--color-secondary)', fontWeight: '700', fontSize: '1.4rem', marginBottom: '0.5rem', letterSpacing: '1px' }}>Siglo XVII en adelante</div>
+          <h2 className="tea-chapter-title" style={{ color: 'var(--color-primary)', marginBottom: '1rem', fontSize: '2rem' }}>La Expansión a Occidente y los Océanos de Té</h2>
+          <p className="tea-text" style={{ fontSize: '1.1rem', lineHeight: '1.7', marginBottom: '1.5rem' }}>
+            Cuando el té comenzó a cruzar los desiertos en la Ruta de la Seda y a navegar meses en las oscuras bodegas de los barcos de la Compañía Británica de las Indias Orientales, los chinos se encontraron con un problema: el delicado té verde se pudría durante el viaje. Para preservarlo, descubrieron que si dejaban que las hojas se magullaran y oxidaran completamente (volviéndose oscuras) antes de secarlas al fuego, soportaban el clima marítimo. Así nació el <strong>Té Negro</strong> y los tés fermentados (Pu-erh). Esta bebida oscura se volvió el motor financiero del Imperio Británico, desató las Guerras del Opio y provocó el célebre Motín del Té en Boston (1773).
+          </p>
+          <div className="tea-tip-box" style={{ background: 'rgba(197, 168, 128, 0.08)', border: '1px solid var(--color-secondary)', borderRadius: 'var(--radius-md)', padding: '1.5rem' }}>
+            <h4 className="tea-tip-title" style={{ color: 'var(--color-secondary)', fontSize: '1.2rem', marginBottom: '0.5rem' }}>El Secreto de la Conservación: Los 4 Enemigos</h4>
+            <p className="tea-tip-text" style={{ fontSize: '1rem', margin: 0, color: 'var(--color-text-muted)' }}>
+              Al igual que los marineros del siglo XVII, debes proteger tu inversión. El té es como una esponja; absorbe humedad y aromas ambientales. Sus cuatro peores enemigos son la <strong>Luz, el Calor, la Humedad y los Olores</strong>. Nunca guardes tu té en frascos de vidrio expuestos a la luz del sol, ni lo coloques en la despensa junto al café o las especias fuertes. Guárdalos siempre en latas opacas herméticas, en el lugar más fresco y seco de tu casa.
             </p>
           </div>
-          
-          <div className="tea-table-wrapper">
-            <table className="tea-table">
+        </div>
+
+        {/* Tabla de Temperaturas y Tiempos */}
+        <div className="glass-panel" style={{ padding: '2.5rem', marginBottom: '4rem', borderRadius: 'var(--radius-lg)' }}>
+          <h2 className="tea-chapter-title" style={{ color: 'var(--color-primary)', marginBottom: '1rem', fontSize: '2rem', textAlign: 'center' }}>
+            La Alquimia del Tiempo y la Temperatura
+          </h2>
+          <p className="tea-text" style={{ textAlign: 'center', marginBottom: '2rem', fontSize: '1.1rem' }}>
+            Toda la historia anterior pierde sentido si arruinas la hoja con agua hirviendo. Aquí tienes la guía definitiva de preparación.
+          </p>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
               <thead>
-                <tr>
-                  <th>Variedad</th>
-                  <th>Historia / Proceso</th>
-                  <th className="tea-color-secondary">Temperatura</th>
-                  <th className="tea-color-secondary">Tiempo</th>
+                <tr style={{ borderBottom: '2px solid var(--color-secondary)' }}>
+                  <th style={{ padding: '1rem', color: 'var(--color-secondary)' }}>Variedad</th>
+                  <th style={{ padding: '1rem', color: 'var(--color-secondary)' }}>Nivel de Oxidación</th>
+                  <th style={{ padding: '1rem', color: 'var(--color-secondary)' }}>Temperatura Ideal</th>
+                  <th style={{ padding: '1rem', color: 'var(--color-secondary)' }}>Tiempo de Infusión</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className="tea-table-strong">Té Blanco</td>
-                  <td className="tea-table-desc">El tesoro imperial chino. Cosechan los brotes tiernos y solo los dejan secar al sol. Delicado, dulce y sutil.</td>
-                  <td className="tea-table-temp">75°C - 80°C</td>
-                  <td>3 a 5 min</td>
+                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>Té Blanco</td>
+                  <td style={{ padding: '1rem', color: 'var(--color-text-muted)' }}>10% - 15% (Secado al sol)</td>
+                  <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>75°C - 80°C</td>
+                  <td style={{ padding: '1rem' }}>3 a 5 min</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>Té Verde</td>
+                  <td style={{ padding: '1rem', color: 'var(--color-text-muted)' }}>0% (Tostado o vaporizado)</td>
+                  <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>70°C - 80°C</td>
+                  <td style={{ padding: '1rem' }}>1.5 a 3 min</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>Oolong (Azul)</td>
+                  <td style={{ padding: '1rem', color: 'var(--color-text-muted)' }}>20% - 80% (Semi-oxidado)</td>
+                  <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>85°C - 90°C</td>
+                  <td style={{ padding: '1rem' }}>3 a 5 min</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>Té Negro</td>
+                  <td style={{ padding: '1rem', color: 'var(--color-text-muted)' }}>100% (Oxidación completa)</td>
+                  <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>95°C - 100°C</td>
+                  <td style={{ padding: '1rem' }}>3 a 5 min</td>
+                </tr>
+                <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>Pu-erh (Rojo)</td>
+                  <td style={{ padding: '1rem', color: 'var(--color-text-muted)' }}>Post-Fermentado</td>
+                  <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>95°C - 100°C</td>
+                  <td style={{ padding: '1rem' }}>3 a 5 min</td>
                 </tr>
                 <tr>
-                  <td className="tea-table-strong">Té Verde</td>
-                  <td className="tea-table-desc">Las hojas se tuestan inmediatamente tras la cosecha para evitar que se oxiden. Rico en antioxidantes.</td>
-                  <td className="tea-table-temp">70°C - 80°C</td>
-                  <td>1.5 a 3 min</td>
-                </tr>
-                <tr>
-                  <td className="tea-table-strong">Oolong (Azul)</td>
-                  <td className="tea-table-desc">El té de los grandes maestros. Semioxidado. Complejidad aromática a flores o tostados.</td>
-                  <td className="tea-table-temp">85°C - 90°C</td>
-                  <td>3 a 5 min</td>
-                </tr>
-                <tr>
-                  <td className="tea-table-strong">Té Negro</td>
-                  <td className="tea-table-desc">Las hojas se rompen a propósito para que el oxígeno las oxide por completo. Robusto y astringente.</td>
-                  <td className="tea-table-temp">95°C - 100°C</td>
-                  <td>3 a 5 min</td>
-                </tr>
-                <tr>
-                  <td className="tea-table-strong">Pu-erh (Rojo)</td>
-                  <td className="tea-table-desc">Fermentado bajo tierra durante años. Su sabor es terroso y es un excelente digestivo.</td>
-                  <td className="tea-table-temp">95°C - 100°C</td>
-                  <td>3 a 5 min</td>
-                </tr>
-                <tr>
-                  <td className="tea-table-strong">Tisanas / Hierbas</td>
-                  <td className="tea-table-desc">Menta, manzanilla, florales. No provienen de la planta del té, por lo que NO tienen cafeína/teína.</td>
-                  <td className="tea-table-temp">100°C</td>
-                  <td>5 a 8 min</td>
+                  <td style={{ padding: '1rem', fontWeight: 'bold' }}>Tisanas / Blends Florales</td>
+                  <td style={{ padding: '1rem', color: 'var(--color-text-muted)' }}>Sin Camellia sinensis</td>
+                  <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>100°C</td>
+                  <td style={{ padding: '1rem' }}>5 a 8 min</td>
                 </tr>
               </tbody>
             </table>
           </div>
-          <div className="tea-tip-box tea-tip-box-special">
-            <strong className="tea-color-secondary">Tip de Oro:</strong> ¿Tu té verde siempre sabe amargo y astringente? Es porque usaste agua demasiado caliente (hirviendo) o lo dejaste más de 3 minutos. El exceso de calor "quema" la hoja liberando taninos que destruyen el sabor sutil y dulce del té. Para enfriar tu agua hervida rápido, pásala por 2 tazas frías antes de servirla en la tetera.
-          </div>
         </div>
 
-        {/* Capítulo 6: La Química y el Mindfulness */}
-        <div className="glass-panel chapter-panel">
-          <div className="chapter-header">
-            <span className="chapter-number">CAPÍTULO VI</span>
-            <h2 className="tea-chapter-title">
-              La Química de la Calma
-            </h2>
-          </div>
-          <p className="tea-text">
-            Una de las mayores diferencias entre el café y el té es cómo te hacen sentir. El café te empuja a un pico de adrenalina rápida que a menudo termina en nerviosismo y un "bajón" repentino. 
-          </p>
-          <p className="tea-text">
-            El té posee un secreto químico maravilloso: un aminoácido llamado <strong>L-Teanina</strong>. Esta molécula natural se adhiere a la cafeína del té (teína) y ralentiza su paso a la sangre. Al mismo tiempo, la L-Teanina estimula la producción de ondas cerebrales Alfa (asociadas a la meditación y la creatividad).
-          </p>
-          <div className="tea-tip-box">
-            <h4 className="tea-tip-title">Tip Práctico: Tu Ritual de Mindfulness</h4>
-            <p className="tea-tip-text">
-              Aprovecha esta química para crear tu propio ritual diario. Aléjate de las pantallas por 10 minutos. Escucha el sonido del agua al caer, observa cómo el vapor sube y dibuja formas en el aire, y mira cómo las hojas se desenrollan lentamente en el agua, devolviendo la vida que tenían en la montaña. Beber té no es hidratarse; es meditar en movimiento.
-            </p>
-          </div>
-        </div>
-
-        {/* Cierre */}
-        <div className="glass-panel chapter-panel chapter-panel-final">
-          <h2 className="tea-closing-title">
-            Tu Próxima Taza te Espera
+        {/* Conclusion */}
+        <div className="glass-panel chapter-panel chapter-panel-final" style={{ textAlign: 'center', marginTop: '4rem', padding: '4rem', borderRadius: 'var(--radius-lg)', background: 'linear-gradient(135deg, rgba(30,30,30,0.8), rgba(20,20,20,0.9))' }}>
+          <h2 className="tea-closing-title" style={{ color: 'var(--color-secondary)', marginBottom: '1.5rem', fontSize: '2.5rem' }}>
+            El Viaje Continúa en tu Taza
           </h2>
-          <p className="tea-closing-text">
-            Ahora que conoces los secretos, el origen, las temperaturas y la alquimia de esta bebida legendaria, estás listo para llevar tu experiencia al siguiente nivel. Visita nuestro catálogo o diseña tu propio blend personalizado aplicando todo lo que has aprendido. En <strong>Estrella del Oriente</strong> te damos las hebras, pero la magia la creas tú.
+          <p className="tea-closing-text" style={{ fontSize: '1.2rem', color: 'var(--color-text-muted)', lineHeight: '1.8' }}>
+            Cada vez que preparas una taza con paciencia, respetando los tiempos y prestando atención a los aromas, te conviertes en parte de una tradición ininterrumpida de cinco mil años. En <strong>Estrella del Oriente</strong>, te proporcionamos las hebras de mayor pureza; pero la magia, la química y la calma, las creas tú con el agua de tu hogar.
           </p>
         </div>
 

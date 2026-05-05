@@ -1,6 +1,7 @@
 import React from 'react';
-import { X, Minus, Plus, ShoppingBag } from 'lucide-react';
+import { X, Minus, Plus, ShoppingBag, Save, LogIn } from 'lucide-react';
 import { useCart } from '../CartContext';
+import { useAuth } from '../AuthContext';
 
 interface CartModalProps {
   isOpen: boolean;
@@ -8,7 +9,8 @@ interface CartModalProps {
 }
 
 export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
-  const { items, updateQuantity, removeFromCart, total, clearCart } = useCart();
+  const { items, updateQuantity, removeFromCart, total, clearCart, saveCartForLater, isSaving } = useCart();
+  const { user, login } = useAuth();
 
   if (!isOpen) return null;
 
@@ -36,6 +38,14 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
     window.open(whatsappUrl, '_blank');
     clearCart();
     onClose();
+  };
+
+  const handleLogin = async () => {
+    try {
+      await login();
+    } catch (error) {
+      console.error("Login failed", error);
+    }
   };
 
   return (
@@ -85,9 +95,33 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
               <span>Total:</span>
               <span>${total.toLocaleString('es-AR')}</span>
             </div>
-            <button className="btn btn-primary" style={{ width: '100%', padding: '1rem' }} onClick={handleCheckout}>
-              Pedir por WhatsApp
-            </button>
+
+            {!user ? (
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
+                  Por favor, inicia sesión para poder finalizar tu pedido o guardarlo para más tarde.
+                </p>
+                <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }} onClick={handleLogin}>
+                  <LogIn size={20} />
+                  Iniciar Sesión con Google
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <button className="btn btn-primary" style={{ width: '100%', padding: '1rem' }} onClick={handleCheckout}>
+                  Confirmar y Pedir por WhatsApp
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  style={{ width: '100%', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', background: 'var(--color-bg-alt)' }} 
+                  onClick={saveCartForLater}
+                  disabled={isSaving}
+                >
+                  <Save size={20} />
+                  {isSaving ? 'Guardando...' : 'Guardar para después'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

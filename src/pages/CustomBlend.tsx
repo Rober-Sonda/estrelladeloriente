@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCart } from '../CartContext';
+import { useToast } from '../ToastContext';
 
 const basesTe = [
   { id: 'b1', name: 'Té Verde', desc: 'Fresco, herbáceo y antioxidante.' },
@@ -21,35 +22,71 @@ const botanicals = [
 
 export const CustomBlend: React.FC = () => {
   const { addToCart } = useCart();
+  const { showToast } = useToast();
   const [selectedBase, setSelectedBase] = useState<string>('');
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
-  const [blendName, setBlendName] = useState<string>('');
 
   const handleIngredientToggle = (ingredient: string) => {
+    const isSelected = selectedIngredients.includes(ingredient);
+    
+    if (!isSelected && selectedIngredients.length >= 3) {
+      showToast("Puedes elegir un máximo de 3 ingredientes botánicos para mantener el equilibrio del sabor.", "error");
+      return;
+    }
+
     setSelectedIngredients(prev => {
-      if (prev.includes(ingredient)) {
+      if (isSelected) {
         return prev.filter(i => i !== ingredient);
-      }
-      if (prev.length >= 3) {
-        alert("Puedes elegir un máximo de 3 ingredientes botánicos para mantener el equilibrio del sabor.");
-        return prev;
       }
       return [...prev, ingredient];
     });
   };
 
+  // Generador determinístico de nombres místicos/históricos para el blend
+  const generatedName = useMemo(() => {
+    if (!selectedBase) return '';
+
+    const baseNouns: Record<string, string> = {
+      'Té Verde': 'Brisa de Jade',
+      'Té Negro': 'Sombra Imperial',
+      'Té Rojo (Pu-erh)': 'Tierra Milenaria',
+      'Té Blanco': 'Lágrima de Loto'
+    };
+
+    const ingAdjectives: Record<string, string> = {
+      'Pétalos de Rosa': 'del Jardín Prohibido',
+      'Hibiscus (Jamaica)': 'del Atardecer Carmesí',
+      'Manzanilla': 'de la Calma Eterna',
+      'Menta': 'del Bosque Boreal',
+      'Cedrón': 'del Valle Luminoso',
+      'Jengibre': 'del Despertar',
+      'Lavanda': 'de los Sueños Místicos',
+      'Cáscara de Naranja': 'del Verano Dorado'
+    };
+
+    const noun = baseNouns[selectedBase] || 'Elixir Ancestral';
+    
+    if (selectedIngredients.length === 0) return `${noun} Puro`;
+
+    // Usa el primer ingrediente como modificador principal para el nombre
+    const primaryIng = selectedIngredients[0];
+    const adj = ingAdjectives[primaryIng] || 'de la Dinastía Perdida';
+
+    return `${noun} ${adj}`;
+  }, [selectedBase, selectedIngredients]);
+
   const handleAddToCart = () => {
-    if (!selectedBase || selectedIngredients.length === 0 || !blendName) {
-      alert("Por favor completa todos los pasos: Base, ingredientes y un nombre para tu creación.");
+    if (!selectedBase || selectedIngredients.length === 0) {
+      showToast("Por favor selecciona una base de té y al menos un ingrediente botánico.", "error");
       return;
     }
 
     const customProduct = {
       id: `custom-blend-${Date.now()}`,
-      name: `Tu Blend: "${blendName}"`,
-      description: `Un blend artesanal creado por ti sobre una base de ${selectedBase} con notas de ${selectedIngredients.join(', ')}.`,
-      price: 12000, // Fixed price for custom blends
-      image: '/hero_tea_peace.png', // Fallback image for custom creations
+      name: `Blend: "${generatedName}"`,
+      description: `Un blend artesanal místico sobre una base de ${selectedBase} con notas de ${selectedIngredients.join(', ')}.`,
+      price: 12000, 
+      image: '/hero_tea_peace.png', 
       category: 'blend' as const
     };
 
@@ -58,17 +95,15 @@ export const CustomBlend: React.FC = () => {
       ingredients: selectedIngredients
     });
 
-    alert("¡Tu blend personalizado ha sido agregado al carrito!");
     setSelectedBase('');
     setSelectedIngredients([]);
-    setBlendName('');
   };
 
   return (
     <div className="container" style={{ paddingTop: '100px', paddingBottom: '4rem', maxWidth: '800px' }}>
       <h1 className="section-title">Crea tu Propio Blend</h1>
       <p className="text-center mb-3" style={{ color: 'var(--color-text-muted)' }}>
-        Conviértete en un Tea Blender. Selecciona tu base favorita y añade ingredientes para crear una infusión que sea 100% tuya.
+        Conviértete en un Tea Blender. Selecciona tu base favorita y añade ingredientes para crear una infusión única. Los antiguos espíritus del té nombrarán tu creación.
       </p>
 
       <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)', marginBottom: '2rem' }}>
@@ -113,25 +148,14 @@ export const CustomBlend: React.FC = () => {
         </div>
       </div>
 
-      <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)', marginBottom: '2rem' }}>
-        <h3 style={{ marginBottom: '1rem', color: 'var(--color-primary)' }}>3. Bautiza tu Creación</h3>
-        <input 
-          type="text" 
-          value={blendName}
-          onChange={(e) => setBlendName(e.target.value)}
-          placeholder="Ej: Mañana Serenas, Mix Energético, etc..."
-          style={{
-            width: '100%',
-            padding: '1rem',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--color-border)',
-            background: 'var(--color-bg-alt)',
-            color: 'var(--color-text)',
-            fontFamily: 'var(--font-body)',
-            fontSize: '1rem'
-          }}
-        />
-      </div>
+      {generatedName && (
+        <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)', marginBottom: '2rem', textAlign: 'center', background: 'rgba(197, 168, 128, 0.05)' }}>
+          <h3 style={{ marginBottom: '0.5rem', color: 'var(--color-text-muted)', fontSize: '1rem' }}>El nombre de tu creación es:</h3>
+          <h2 style={{ color: 'var(--color-primary)', fontFamily: 'var(--font-heading)', fontSize: '2rem', letterSpacing: '1px' }}>
+            « {generatedName} »
+          </h2>
+        </div>
+      )}
 
       <div style={{ textAlign: 'center', marginTop: '3rem' }}>
         <h2 style={{ color: 'var(--color-secondary)' }}>Precio: $12.000</h2>
@@ -139,6 +163,7 @@ export const CustomBlend: React.FC = () => {
           className="btn btn-primary" 
           style={{ padding: '1rem 3rem', fontSize: '1.2rem', marginTop: '1rem' }}
           onClick={handleAddToCart}
+          disabled={!selectedBase || selectedIngredients.length === 0}
         >
           Agregar al Carrito
         </button>

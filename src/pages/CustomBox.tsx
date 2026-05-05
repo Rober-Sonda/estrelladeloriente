@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useCart } from '../CartContext';
 import { catalogProducts, type Product } from '../data/products';
+import { useToast } from '../ToastContext';
 
 const BOX_TYPES = [
   { id: 'box1', name: 'Caja Regalo Clásica', price: 3000, desc: 'Hermosa caja de cartón rígido con moño.' },
@@ -9,6 +10,7 @@ const BOX_TYPES = [
 
 export const CustomBox: React.FC = () => {
   const { addToCart } = useCart();
+  const { showToast } = useToast();
   const [selectedBox, setSelectedBox] = useState<typeof BOX_TYPES[0] | null>(null);
   const [selectedItems, setSelectedItems] = useState<Product[]>([]);
 
@@ -17,18 +19,18 @@ export const CustomBox: React.FC = () => {
   const bazarItems = catalogProducts.filter(p => p.category === 'bazar');
 
   const toggleItem = (product: Product) => {
+    const exists = selectedItems.find(p => p.id === product.id);
+    
+    // Limit to 4 items per box
+    if (!exists && selectedItems.length >= 4) {
+      showToast("La caja tiene un límite de 4 artículos para garantizar que todo entre de forma elegante y segura.", "error");
+      return;
+    }
+
     setSelectedItems(prev => {
-      const exists = prev.find(p => p.id === product.id);
       if (exists) {
         return prev.filter(p => p.id !== product.id);
       }
-      
-      // Limit to 4 items per box
-      if (prev.length >= 4) {
-        alert("La caja tiene un límite de 4 artículos para garantizar que todo entre de forma elegante y segura.");
-        return prev;
-      }
-      
       return [...prev, product];
     });
   };
@@ -41,11 +43,11 @@ export const CustomBox: React.FC = () => {
 
   const handleAddToCart = () => {
     if (!selectedBox) {
-      alert("Por favor, selecciona un tipo de caja.");
+      showToast("Por favor, selecciona un tipo de caja.", "error");
       return;
     }
     if (selectedItems.length === 0) {
-      alert("Por favor, selecciona al menos un producto para poner en tu caja.");
+      showToast("Por favor, selecciona al menos un producto para poner en tu caja.", "error");
       return;
     }
 
@@ -63,7 +65,6 @@ export const CustomBox: React.FC = () => {
       items: selectedItems
     });
 
-    alert("¡Tu Box Personalizado ha sido agregado al carrito!");
     setSelectedBox(null);
     setSelectedItems([]);
   };

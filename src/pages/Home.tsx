@@ -27,32 +27,32 @@ export const Home: React.FC = () => {
       <section className="section container">
         <h2 className="section-title">Destacados</h2>
         <div className="product-grid">
-          {/* Mock Featured Product 1 */}
+          {/* Categoría: Té */}
           <div className="product-card">
             <div className="product-image-wrapper">
-              <img src="/tea_blend_mix.png" alt="Blend Relax" className="product-image" />
+              <img src="/tea_blend_mix.png" alt="Blends para Té" className="product-image" />
             </div>
             <div className="product-info">
-              <h3 className="product-title">Blend Paz Interior</h3>
-              <p className="product-desc">Una mezcla artesanal de manzanilla, pétalos de rosa y té verde suave, ideal para desconectar al final del día.</p>
+              <h3 className="product-title">Universo del Té</h3>
+              <p className="product-desc">Descubrí nuestra exclusiva selección de blends de té en hebras. Sabores únicos diseñados para acompañar tus momentos de calma, meditación y bienestar.</p>
               <div className="product-footer">
-                <span className="product-price">$8.500</span>
-                <Link to="/catalogo" className="btn btn-primary">Ver Catálogo</Link>
+                <span className="product-price">Desde $8.500</span>
+                <Link to="/catalogo" className="btn btn-primary">Ver Blends</Link>
               </div>
             </div>
           </div>
           
-          {/* Mock Featured Product 2 */}
+          {/* Categoría: Mate */}
           <div className="product-card">
             <div className="product-image-wrapper">
-              <img src="/tea_utensils.png" alt="Utensilios de té" className="product-image" />
+              <img src="/premium_mate.png" alt="Especial para Mate" className="product-image" />
             </div>
             <div className="product-info">
-              <h3 className="product-title">Set Ritual Ceremonia</h3>
-              <p className="product-desc">Elevá tu experiencia con nuestro set de utensilios premium. Incluye batidor de bambú, tetera de cerámica y cuchara infusora.</p>
+              <h3 className="product-title">Ritual del Mate</h3>
+              <p className="product-desc">Elevá tu tradición con nuestra línea premium. Blends exclusivos con yerba mate y hierbas seleccionadas que transforman cada cebada en una experiencia única.</p>
               <div className="product-footer">
-                <span className="product-price">$25.000</span>
-                <Link to="/catalogo" className="btn btn-primary">Ver Catálogo</Link>
+                <span className="product-price">Desde $7.200</span>
+                <Link to="/catalogo" className="btn btn-primary">Ver Blends</Link>
               </div>
             </div>
           </div>

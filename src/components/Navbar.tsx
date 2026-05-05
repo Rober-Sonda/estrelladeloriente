@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Moon, Sun, ShoppingBag, Menu, X } from 'lucide-react';
+import { Moon, Sun, ShoppingBag, Menu, X, LogIn, LogOut, User } from 'lucide-react';
 import { useTheme } from '../ThemeContext';
 import { useCart } from '../CartContext';
+import { useAuth } from '../AuthContext';
 import { CartModal } from './CartModal';
 
 export const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { items } = useCart();
+  const { user, login, logout } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  
+  const isAdmin = user && user.email && ['rober.junin@gmail.com', 'juanncaceress99@gmail.com', 'melinabatan@gmail.com'].includes(user.email.toLowerCase());
 
   return (
     <>
@@ -32,6 +36,9 @@ export const Navbar: React.FC = () => {
             <Link to="/crea-tu-blend" className="nav-link">Crea tu Blend</Link>
             <Link to="/arma-tu-box" className="nav-link">Armá tu Box</Link>
             <Link to="/ruta-del-te" className="nav-link">Ruta del Té</Link>
+            {isAdmin && (
+              <Link to="/admin" className="nav-link" style={{ color: 'var(--color-secondary)' }}>Admin</Link>
+            )}
           </div>
 
           <div className="nav-actions">
@@ -46,6 +53,25 @@ export const Navbar: React.FC = () => {
                 </span>
               )}
             </button>
+            
+            {/* User Auth Section */}
+            {!user ? (
+              <button onClick={login} className="icon-btn" aria-label="Login" title="Iniciar Sesión">
+                <LogIn size={20} />
+              </button>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '0.5rem' }}>
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt={user.displayName || 'User'} style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1px solid var(--color-primary)' }} />
+                ) : (
+                  <User size={20} color="var(--color-primary)" />
+                )}
+                <button onClick={logout} className="icon-btn" aria-label="Logout" title="Cerrar Sesión">
+                  <LogOut size={20} />
+                </button>
+              </div>
+            )}
+
             <button className="icon-btn mobile-only" aria-label="Menu" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
               {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -62,6 +88,9 @@ export const Navbar: React.FC = () => {
             <Link to="/crea-tu-blend" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Crea tu Blend</Link>
             <Link to="/arma-tu-box" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Armá tu Box</Link>
             <Link to="/ruta-del-te" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Ruta del Té</Link>
+            {isAdmin && (
+              <Link to="/admin" className="nav-link" style={{ color: 'var(--color-secondary)' }} onClick={() => setIsMobileMenuOpen(false)}>Admin</Link>
+            )}
           </div>
         </div>
       )}
