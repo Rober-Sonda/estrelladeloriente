@@ -228,7 +228,7 @@ export const AdminCatalog: React.FC = () => {
                   </div>
                 ) : (
                   <div>
-                    {formData.variations?.map((v, index) => (
+                    {formData.variations?.map((v) => (
                       <div key={v.id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', marginBottom: '0.8rem' }}>
                         <div style={{ flex: 2 }}>
                           <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.2rem' }}>Tamaño/Ración (ej. 50g)</label>

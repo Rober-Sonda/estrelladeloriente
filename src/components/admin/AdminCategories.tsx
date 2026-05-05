@@ -13,8 +13,6 @@ export const AdminCategories: React.FC = () => {
   const [categories, setCategories] = useState<DynamicCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<DynamicCategory>>({});
 
   const fetchCategories = async () => {
     setLoading(true);

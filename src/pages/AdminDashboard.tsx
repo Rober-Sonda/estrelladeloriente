@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { db } from '../firebase';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, doc, setDoc } from 'firebase/firestore';
 import { catalogProducts } from '../data/products';
 import { AdminCatalog } from '../components/admin/AdminCatalog';
 import { AdminCategories } from '../components/admin/AdminCategories';

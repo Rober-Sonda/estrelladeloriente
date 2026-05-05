@@ -15,7 +15,7 @@ export const CustomBox: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<Product[]>([]);
 
   // Split products to help the user choose
-  const teasAndBlends = catalogProducts.filter(p => p.category === 'té' || p.category === 'blend');
+  const teasAndBlends = catalogProducts.filter(p => p.subCategory === 'té' || p.category === 'blend');
   const bazarItems = catalogProducts.filter(p => p.category === 'bazar');
 
   const toggleItem = (product: Product) => {
