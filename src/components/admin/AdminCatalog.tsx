@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
+import { createPortal } from 'react-dom';
 import { collection, getDocs, updateDoc, doc, addDoc, deleteDoc } from 'firebase/firestore';
-import type { Product, Category, SubCategory, ProductVariation } from '../../data/products';
+import type { Product, ProductVariation } from '../../data/products';
+
+export interface DynamicCategory {
+  id: string;
+  name: string;
+  slug: string;
+  subCategories: string[];
+}
 
 export const AdminCatalog: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [dynamicCategories, setDynamicCategories] = useState<DynamicCategory[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Modal State
@@ -16,8 +25,8 @@ export const AdminCatalog: React.FC = () => {
     price: 0,
     costPrice: 0,
     image: '',
-    category: 'blend',
-    subCategory: 'té',
+    categories: [],
+    subCategories: [],
     hasVariations: false,
     variations: [],
     // @ts-ignore
@@ -44,8 +53,22 @@ export const AdminCatalog: React.FC = () => {
     }
   };
 
+  const fetchDynamicCategories = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'categories'));
+      const cats: DynamicCategory[] = [];
+      querySnapshot.forEach((doc) => {
+        cats.push({ id: doc.id, ...doc.data() } as DynamicCategory);
+      });
+      setDynamicCategories(cats);
+    } catch (error) {
+      console.error("Error fetching dynamic categories:", error);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
+    fetchDynamicCategories();
   }, []);
 
   const handleOpenModal = (product?: Product) => {
@@ -53,6 +76,8 @@ export const AdminCatalog: React.FC = () => {
       setEditingId(product.id);
       setFormData({
         ...product,
+        categories: product.categories || (product.category ? [product.category] : []),
+        subCategories: product.subCategories || (product.subCategory ? [product.subCategory] : []),
         costPrice: product.costPrice || 0,
         hasVariations: product.hasVariations || false,
         variations: product.variations || []
@@ -65,8 +90,8 @@ export const AdminCatalog: React.FC = () => {
         price: 0,
         costPrice: 0,
         image: '',
-        category: 'blend',
-        subCategory: 'té',
+        categories: [],
+        subCategories: [],
         hasVariations: false,
         variations: [],
         // @ts-ignore
@@ -158,7 +183,7 @@ export const AdminCatalog: React.FC = () => {
         <button className="btn btn-primary" onClick={() => handleOpenModal()}>+ Nuevo Producto</button>
       </div>
 
-      {isModalOpen && (
+      {isModalOpen && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '1rem' }}>
           <div className="glass-panel" style={{ width: '100%', maxWidth: '700px', padding: '2rem', borderRadius: 'var(--radius-lg)', maxHeight: '90vh', overflowY: 'auto' }}>
             <h3 style={{ marginTop: 0, color: 'var(--color-primary)' }}>{editingId ? 'Editar Producto' : 'Nuevo Producto'}</h3>
@@ -181,27 +206,76 @@ export const AdminCatalog: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <div style={{ flex: '1 1 200px' }}>
-                  <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Categoría Principal</label>
-                  <select className="filter-select" style={{ width: '100%', padding: '0.5rem' }} value={formData.category || 'blend'} onChange={e => setFormData({...formData, category: e.target.value as Category})}>
-                    <option value="blend">Blends</option>
-                    <option value="hierba">Hierbas Puras</option>
-                    <option value="bazar">Accesorios</option>
-                  </select>
-                </div>
-                <div style={{ flex: '1 1 200px' }}>
-                  <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Subcategoría (Opcional)</label>
-                  <select className="filter-select" style={{ width: '100%', padding: '0.5rem' }} value={formData.subCategory || ''} onChange={e => setFormData({...formData, subCategory: e.target.value as SubCategory})}>
-                    <option value="">Ninguna</option>
-                    <option value="té">Para Té</option>
-                    <option value="mate">Para Mate</option>
-                    <option value="ambos">Para Ambos</option>
-                    <option value="digestiva">Digestivas</option>
-                    <option value="relajante">Relajantes</option>
-                    <option value="refrescante">Refrescantes</option>
-                    <option value="general">Otras (General)</option>
-                  </select>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid var(--color-border)', padding: '1rem', borderRadius: 'var(--radius-sm)' }}>
+                <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem', fontWeight: 'bold' }}>Categorías y Subcategorías</label>
+                {dynamicCategories.length === 0 ? <p style={{fontSize: '0.8rem', color: 'var(--color-text-muted)'}}>No hay categorías creadas. Ve a Configuración &gt; Gestión de Categorías.</p> : null}
+                <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                  {dynamicCategories.map(cat => {
+                    const isCatChecked = (formData.categories || []).includes(cat.name);
+                    return (
+                      <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', minWidth: '150px', background: 'var(--color-bg-alt)', padding: '1rem', borderRadius: 'var(--radius-sm)' }}>
+                        <label style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+                          <input 
+                            type="checkbox" 
+                            style={{ display: 'none' }}
+                            checked={isCatChecked}
+                            onChange={(e) => {
+                              const newCats = e.target.checked 
+                                ? [...(formData.categories || []), cat.name] 
+                                : (formData.categories || []).filter(c => c !== cat.name);
+                              setFormData({...formData, categories: newCats});
+                            }} 
+                          />
+                          <span style={{ 
+                            padding: '0.4rem 1rem', 
+                            borderRadius: '20px', 
+                            fontSize: '0.9rem',
+                            fontWeight: 'bold',
+                            transition: 'all 0.2s',
+                            background: isCatChecked ? 'var(--color-primary)' : 'var(--color-surface)',
+                            color: isCatChecked ? '#fff' : 'var(--color-text)',
+                            border: `1px solid ${isCatChecked ? 'var(--color-primary)' : 'var(--color-border)'}`
+                          }}>
+                            {cat.name}
+                          </span>
+                        </label>
+                        
+                        {cat.subCategories && cat.subCategories.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                            {cat.subCategories.map(sub => {
+                              const isSubChecked = (formData.subCategories || []).includes(sub);
+                              return (
+                                <label key={sub} style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
+                                  <input 
+                                    type="checkbox" 
+                                    style={{ display: 'none' }}
+                                    checked={isSubChecked}
+                                    onChange={(e) => {
+                                      const newSubs = e.target.checked 
+                                        ? [...(formData.subCategories || []), sub] 
+                                        : (formData.subCategories || []).filter(s => s !== sub);
+                                      setFormData({...formData, subCategories: newSubs});
+                                    }} 
+                                  />
+                                  <span style={{ 
+                                    padding: '0.2rem 0.8rem', 
+                                    borderRadius: '15px', 
+                                    fontSize: '0.85rem',
+                                    transition: 'all 0.2s',
+                                    background: isSubChecked ? 'var(--color-secondary)' : 'var(--color-bg)',
+                                    color: isSubChecked ? '#fff' : 'var(--color-text-muted)',
+                                    border: `1px solid ${isSubChecked ? 'var(--color-secondary)' : 'var(--color-border)'}`
+                                  }}>
+                                    {sub}
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -274,7 +348,7 @@ export const AdminCatalog: React.FC = () => {
               </div>
             </form>
           </div>
-        </div>
+        </div>, document.body
       )}
 
       <div style={{ overflowX: 'auto' }}>
@@ -294,7 +368,9 @@ export const AdminCatalog: React.FC = () => {
             {products.map(product => (
               <tr key={product.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                 <td style={{ padding: '1rem' }}>
-                  <img src={product.image} alt={product.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
+                  <div style={{ width: '50px', height: '50px', overflow: 'hidden', borderRadius: '4px', backgroundColor: 'var(--color-bg)' }}>
+                    <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
                 </td>
                 
                 <td style={{ padding: '1rem', fontWeight: 'bold' }}>
@@ -302,7 +378,10 @@ export const AdminCatalog: React.FC = () => {
                 </td>
                 
                 <td style={{ padding: '1rem' }}>
-                  <span>{product.category} {product.subCategory ? ` > ${product.subCategory}` : ''}</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <span style={{ fontWeight: 'bold' }}>{product.categories?.length ? product.categories.join(', ') : product.category}</span>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>{product.subCategories?.length ? product.subCategories.join(', ') : product.subCategory}</span>
+                  </div>
                 </td>
                 
                 <td style={{ padding: '1rem' }}>

@@ -50,10 +50,23 @@ export const Catalog: React.FC = () => {
   };
 
   const filteredProducts = products.filter(p => {
-    const matchCategory = activeCategory === 'todos' || p.category === activeCategory;
-    const matchSubCategory = activeSubCategory === 'todos' || p.subCategory === activeSubCategory;
+    let matchCategory = true;
+    if (activeCategory !== 'todos') {
+      const legacyMatch = p.category === activeCategory;
+      const newMatch = p.categories && activeCategoryObj ? p.categories.includes(activeCategoryObj.name) : false;
+      matchCategory = legacyMatch || newMatch;
+    }
+
+    let matchSubCategory = true;
+    if (activeSubCategory !== 'todos') {
+      const legacySubMatch = p.subCategory === activeSubCategory;
+      const newSubMatch = p.subCategories ? p.subCategories.includes(activeSubCategory) : false;
+      matchSubCategory = legacySubMatch || newSubMatch;
+    }
+
     const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                         p.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
     return matchCategory && matchSubCategory && matchSearch;
   });
 
@@ -178,7 +191,9 @@ export const Catalog: React.FC = () => {
             </div>
             <div className="product-info">
               <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--color-secondary)', fontWeight: 700, letterSpacing: '2px' }}>
-                {product.category} {product.subCategory && `• ${product.subCategory}`}
+                {product.categories?.length ? product.categories.join(', ') : product.category} 
+                {(product.subCategories?.length || product.subCategory) ? ' • ' : ''}
+                {product.subCategories?.length ? product.subCategories.join(', ') : product.subCategory}
               </span>
               <h3 className="product-title" style={{ marginTop: '0.8rem', fontSize: '1.4rem' }}>{product.name}</h3>
               <p className="product-desc" style={{ fontSize: '0.95rem' }}>{product.description}</p>

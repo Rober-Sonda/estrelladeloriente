@@ -14,8 +14,10 @@ export interface Product {
   description: string;
   price: number;
   image: string;
-  category: Category;
-  subCategory?: SubCategory;
+  category?: Category; // Legacy
+  subCategory?: SubCategory; // Legacy
+  categories?: string[];
+  subCategories?: string[];
   costPrice?: number;
   hasVariations?: boolean;
   variations?: ProductVariation[];
