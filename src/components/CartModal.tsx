@@ -2,6 +2,8 @@ import React from 'react';
 import { X, Minus, Plus, ShoppingBag, Save, LogIn } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { useAuth } from '../AuthContext';
+import { db } from '../firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 interface CartModalProps {
   isOpen: boolean;
@@ -14,30 +16,54 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (items.length === 0) return;
 
-    let message = `Hola! Vengo desde la página de Estrella del Oriente y quisiera realizar el siguiente pedido:%0A%0A`;
-    
-    items.forEach(item => {
-      message += `- ${item.quantity}x ${item.name} ($${(item.price * item.quantity).toLocaleString('es-AR')})%0A`;
-      if (item.customBlendDetails) {
-        message += `  Base: ${item.customBlendDetails.base}%0A`;
-        message += `  Ingredientes: ${item.customBlendDetails.ingredients.join(', ')}%0A`;
-      }
-      if (item.customBoxDetails) {
-        message += `  Caja: ${item.customBoxDetails.boxType}%0A`;
-        message += `  Contiene: ${item.customBoxDetails.items.map(i => i.name).join(', ')}%0A`;
-      }
-    });
-    
-    message += `%0A*Total: $${total.toLocaleString('es-AR')}*%0A%0A`;
-    message += `¿Me podrían confirmar si tienen stock y cómo coordinamos el pago/envío? Muchas gracias!`;
+    if (!user) {
+      alert("Por favor, inicia sesión para poder realizar el pedido.");
+      return;
+    }
 
-    const whatsappUrl = `https://wa.me/5492317472432?text=${message}`;
-    window.open(whatsappUrl, '_blank');
-    clearCart();
-    onClose();
+    try {
+      const orderData = {
+        userId: user.uid,
+        userEmail: user.email,
+        userName: user.displayName,
+        items: items,
+        total: total,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      
+      const docRef = await addDoc(collection(db, 'orders'), orderData);
+
+      let message = `Hola! Vengo desde la página de Estrella del Oriente y quisiera realizar el siguiente pedido (ID: ${docRef.id}):%0A%0A`;
+      
+      items.forEach(item => {
+        message += `- ${item.quantity}x ${item.name} ($${(item.price * item.quantity).toLocaleString('es-AR')})%0A`;
+        if (item.customBlendDetails) {
+          message += `  Base: ${item.customBlendDetails.base}%0A`;
+          message += `  Ingredientes: ${item.customBlendDetails.ingredients.join(', ')}%0A`;
+        }
+        if (item.customBoxDetails) {
+          message += `  Caja: ${item.customBoxDetails.boxType}%0A`;
+          message += `  Contiene: ${item.customBoxDetails.items.map(i => i.name).join(', ')}%0A`;
+        }
+      });
+      
+      message += `%0A*Total: $${total.toLocaleString('es-AR')}*%0A%0A`;
+      message += `¿Me podrían confirmar si tienen stock y cómo coordinamos el pago/envío? Muchas gracias!`;
+
+      const whatsappUrl = `https://wa.me/5492317472432?text=${message}`;
+      window.open(whatsappUrl, '_blank');
+      
+      clearCart();
+      onClose();
+    } catch (error) {
+      console.error("Error creating order", error);
+      alert("Hubo un error al procesar tu pedido. Inténtalo nuevamente.");
+    }
   };
 
   const handleLogin = async () => {

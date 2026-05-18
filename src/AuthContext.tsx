@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { User } from 'firebase/auth';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
-import { auth, googleProvider } from './firebase';
+import { doc, setDoc } from 'firebase/firestore';
+import { auth, googleProvider, db } from './firebase';
 
 interface AuthContextType {
   user: User | null;
@@ -17,8 +18,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        try {
+          await setDoc(doc(db, 'users', currentUser.uid), {
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName,
+            photoURL: currentUser.photoURL,
+            lastLoginAt: new Date().toISOString()
+          }, { merge: true });
+        } catch (error) {
+          console.error("Error saving user to Firestore", error);
+        }
+      }
       setLoading(false);
     });
     return () => unsubscribe();

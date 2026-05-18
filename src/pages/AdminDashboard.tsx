@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { useAuth } from '../AuthContext';
+
 import { db } from '../firebase';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { catalogProducts } from '../data/products';
 import { AdminCatalog } from '../components/admin/AdminCatalog';
 import { AdminCategories } from '../components/admin/AdminCategories';
+import { AdminOrders } from '../components/admin/AdminOrders';
+import { AdminMaterials } from '../components/admin/AdminMaterials';
+import { AdminClients } from '../components/admin/AdminClients';
+import { AIAssistant } from '../components/admin/AIAssistant';
 
 export const AdminDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<'finances' | 'catalog' | 'categories' | 'settings'>('finances');
+  const [activeTab, setActiveTab] = useState<'finances' | 'catalog' | 'categories' | 'settings' | 'orders' | 'materials' | 'clients' | 'assistant'>('orders');
   const [isMigrating, setIsMigrating] = useState(false);
 
   const handleMigration = async () => {
@@ -54,47 +57,89 @@ export const AdminDashboard: React.FC = () => {
     <div className="container" style={{ paddingTop: '100px', paddingBottom: '4rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1 className="section-title" style={{ margin: 0 }}>Dashboard Administrativo</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>{user?.email}</span>
-          <button className="btn btn-secondary" style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }} onClick={logout}>
-            Cerrar Sesión
-          </button>
-        </div>
       </div>
 
-      <div className="admin-layout" style={{ display: 'grid', gridTemplateColumns: '250px 1fr', gap: '2rem', alignItems: 'start' }}>
-        
+      <div className="admin-layout">
+
         {/* Sidebar Nav */}
-        <div className="glass-panel" style={{ padding: '1rem', borderRadius: 'var(--radius-md)' }}>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="admin-sidebar glass-panel" style={{ padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+          <div className="admin-mobile-nav">
+            <select
+              value={activeTab}
+              onChange={(e) => setActiveTab(e.target.value as any)}
+            >
+              <option value="orders">Pedidos y Reclamos</option>
+              <option value="finances">Resumen Financiero</option>
+              <option value="catalog">Catálogo de Productos</option>
+              <option value="categories">Categorías</option>
+              <option value="materials">Insumos y Materias Primas</option>
+              <option value="clients">Clientes</option>
+              <option value="assistant">BotAsistente IA</option>
+              <option value="settings">Configuración del Sitio</option>
+            </select>
+          </div>
+
+          <ul className="admin-nav-list">
             <li>
-              <button 
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`admin-nav-btn ${activeTab === 'orders' ? 'active' : ''}`}
+              >
+                Pedidos y Reclamos
+              </button>
+            </li>
+            <li>
+              <button
                 onClick={() => setActiveTab('finances')}
-                style={{ width: '100%', textAlign: 'left', padding: '0.8rem 1rem', background: activeTab === 'finances' ? 'var(--color-primary)' : 'transparent', color: activeTab === 'finances' ? '#fff' : 'var(--color-text)', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', transition: 'all 0.2s', fontWeight: activeTab === 'finances' ? '600' : '400' }}
+                className={`admin-nav-btn ${activeTab === 'finances' ? 'active' : ''}`}
               >
                 Resumen Financiero
               </button>
             </li>
             <li>
-              <button 
+              <button
                 onClick={() => setActiveTab('catalog')}
-                style={{ width: '100%', textAlign: 'left', padding: '0.8rem 1rem', background: activeTab === 'catalog' ? 'var(--color-primary)' : 'transparent', color: activeTab === 'catalog' ? '#fff' : 'var(--color-text)', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', transition: 'all 0.2s', fontWeight: activeTab === 'catalog' ? '600' : '400' }}
+                className={`admin-nav-btn ${activeTab === 'catalog' ? 'active' : ''}`}
               >
                 Catálogo de Productos
               </button>
             </li>
             <li>
-              <button 
+              <button
                 onClick={() => setActiveTab('categories')}
-                style={{ width: '100%', textAlign: 'left', padding: '0.8rem 1rem', background: activeTab === 'categories' ? 'var(--color-primary)' : 'transparent', color: activeTab === 'categories' ? '#fff' : 'var(--color-text)', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', transition: 'all 0.2s', fontWeight: activeTab === 'categories' ? '600' : '400' }}
+                className={`admin-nav-btn ${activeTab === 'categories' ? 'active' : ''}`}
               >
                 Categorías
               </button>
             </li>
             <li>
-              <button 
+              <button
+                onClick={() => setActiveTab('materials')}
+                className={`admin-nav-btn ${activeTab === 'materials' ? 'active' : ''}`}
+              >
+                Insumos y Materias Primas
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => setActiveTab('clients')}
+                className={`admin-nav-btn ${activeTab === 'clients' ? 'active' : ''}`}
+              >
+                Clientes
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => setActiveTab('assistant')}
+                className={`admin-nav-btn ${activeTab === 'assistant' ? 'active' : ''}`}
+              >
+                <img src="/logo-transparent.png" alt="Bot" className="admin-nav-icon" /> Asistente IA
+              </button>
+            </li>
+            <li>
+              <button
                 onClick={() => setActiveTab('settings')}
-                style={{ width: '100%', textAlign: 'left', padding: '0.8rem 1rem', background: activeTab === 'settings' ? 'var(--color-primary)' : 'transparent', color: activeTab === 'settings' ? '#fff' : 'var(--color-text)', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer', transition: 'all 0.2s', fontWeight: activeTab === 'settings' ? '600' : '400' }}
+                className={`admin-nav-btn ${activeTab === 'settings' ? 'active' : ''}`}
               >
                 Configuración del Sitio
               </button>
@@ -103,14 +148,18 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Main Content Area */}
-        <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-md)', minHeight: '600px' }}>
+        <div className="glass-panel" style={{ padding: '2rem', borderRadius: 'var(--radius-md)', minHeight: '600px', minWidth: 0, overflowX: 'hidden' }}>
           {activeTab === 'finances' && (
             <div>
               <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-primary)', marginBottom: '1.5rem' }}>Resumen Financiero</h2>
               <p style={{ color: 'var(--color-text-muted)' }}>Módulo en construcción. Aquí verás los ingresos y egresos del emprendimiento.</p>
             </div>
           )}
-          
+
+          {activeTab === 'orders' && (
+            <AdminOrders />
+          )}
+
           {activeTab === 'catalog' && (
             <AdminCatalog />
           )}
@@ -119,19 +168,31 @@ export const AdminDashboard: React.FC = () => {
             <AdminCategories />
           )}
 
+          {activeTab === 'materials' && (
+            <AdminMaterials />
+          )}
+
+          {activeTab === 'clients' && (
+            <AdminClients />
+          )}
+
+          {activeTab === 'assistant' && (
+            <AIAssistant />
+          )}
+
           {activeTab === 'settings' && (
             <div>
               <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-primary)', marginBottom: '1.5rem' }}>Configuración del Sitio</h2>
               <p style={{ color: 'var(--color-text-muted)' }}>Módulo en construcción. Aquí editarás el contenido del Footer.</p>
-              
+
               <div style={{ marginTop: '3rem', padding: '1.5rem', background: 'rgba(255,0,0,0.05)', border: '1px solid rgba(255,0,0,0.2)', borderRadius: 'var(--radius-sm)' }}>
                 <h3 style={{ color: 'var(--color-primary)', marginBottom: '1rem', fontSize: '1.1rem' }}>Acciones de Desarrollador</h3>
                 <p style={{ color: 'var(--color-text-muted)', marginBottom: '1rem', fontSize: '0.9rem' }}>
                   Usá este botón por única vez para cargar todos los productos que están escritos en el código directamente a la base de datos de Firebase.
                 </p>
-                <button 
-                  className="btn btn-primary" 
-                  onClick={handleMigration} 
+                <button
+                  className="btn btn-primary"
+                  onClick={handleMigration}
                   disabled={isMigrating}
                 >
                   {isMigrating ? 'Migrando datos...' : 'Ejecutar Migración de Catálogo a Firebase'}

@@ -8,6 +8,11 @@ export interface ProductVariation {
   costPrice: number;
 }
 
+export interface BillOfMaterialItem {
+  materialId: string;
+  quantity: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -25,6 +30,7 @@ export interface Product {
   isOnSale?: boolean;
   salePrice?: number | null;
   createdAt?: string;
+  billOfMaterials?: BillOfMaterialItem[];
 }
 
 const adjectives = ['Premium', 'Imperial', 'Artesanal', 'Silvestre', 'Energía', 'Místico', 'Oriental', 'Serenidad', 'Floral'];

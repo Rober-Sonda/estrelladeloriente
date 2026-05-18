@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
 import { createPortal } from 'react-dom';
 import { collection, getDocs, updateDoc, doc, addDoc, deleteDoc } from 'firebase/firestore';
+import { AdminPagination } from './AdminPagination';
 
 export interface DynamicCategory {
   id: string;
@@ -108,7 +109,14 @@ export const AdminCategories: React.FC = () => {
     }
   };
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
   if (loading) return <p>Cargando categorías...</p>;
+  
+  const totalPages = Math.ceil(categories.length / itemsPerPage);
+  const paginatedCategories = categories.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div>
@@ -143,7 +151,7 @@ export const AdminCategories: React.FC = () => {
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-        {categories.map(cat => (
+        {paginatedCategories.map(cat => (
           <div key={cat.id} style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', padding: '1.5rem', background: 'var(--color-surface)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--color-border)', paddingBottom: '0.5rem' }}>
               <h3 style={{ margin: 0, textTransform: 'uppercase', color: 'var(--color-primary)', letterSpacing: '1px' }}>{cat.name}</h3>
@@ -194,6 +202,11 @@ export const AdminCategories: React.FC = () => {
         </div>, document.body
       )}
 
+      <AdminPagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

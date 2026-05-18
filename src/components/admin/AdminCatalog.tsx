@@ -3,6 +3,7 @@ import { db } from '../../firebase';
 import { createPortal } from 'react-dom';
 import { collection, getDocs, updateDoc, doc, addDoc, deleteDoc } from 'firebase/firestore';
 import type { Product, ProductVariation } from '../../data/products';
+import { AdminPagination } from './AdminPagination';
 
 export interface DynamicCategory {
   id: string;
@@ -14,6 +15,7 @@ export interface DynamicCategory {
 export const AdminCatalog: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [dynamicCategories, setDynamicCategories] = useState<DynamicCategory[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Modal State
@@ -34,7 +36,8 @@ export const AdminCatalog: React.FC = () => {
     // @ts-ignore
     isOnSale: false,
     // @ts-ignore
-    salePrice: 0
+    salePrice: 0,
+    billOfMaterials: []
   });
 
   const fetchProducts = async () => {
@@ -66,9 +69,23 @@ export const AdminCatalog: React.FC = () => {
     }
   };
 
+  const fetchMaterials = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, 'materials'));
+      const mats: any[] = [];
+      querySnapshot.forEach((doc) => {
+        mats.push({ id: doc.id, ...doc.data() });
+      });
+      setMaterials(mats);
+    } catch (error) {
+      console.error("Error fetching materials:", error);
+    }
+  };
+
   useEffect(() => {
     fetchProducts();
     fetchDynamicCategories();
+    fetchMaterials();
   }, []);
 
   const handleOpenModal = (product?: Product) => {
@@ -80,7 +97,8 @@ export const AdminCatalog: React.FC = () => {
         subCategories: product.subCategories || (product.subCategory ? [product.subCategory] : []),
         costPrice: product.costPrice || 0,
         hasVariations: product.hasVariations || false,
-        variations: product.variations || []
+        variations: product.variations || [],
+        billOfMaterials: product.billOfMaterials || []
       });
     } else {
       setEditingId(null);
@@ -99,7 +117,8 @@ export const AdminCatalog: React.FC = () => {
         // @ts-ignore
         isOnSale: false,
         // @ts-ignore
-        salePrice: 0
+        salePrice: 0,
+        billOfMaterials: []
       });
     }
     setIsModalOpen(true);
@@ -173,6 +192,32 @@ export const AdminCatalog: React.FC = () => {
     const updatedVariations = formData.variations?.filter(v => v.id !== id);
     setFormData({ ...formData, variations: updatedVariations });
   };
+
+  const addBomItem = () => {
+    setFormData({
+      ...formData,
+      billOfMaterials: [...(formData.billOfMaterials || []), { materialId: '', quantity: 1 }]
+    });
+  };
+
+  const updateBomItem = (index: number, field: string, value: any) => {
+    const updatedBom = [...(formData.billOfMaterials || [])];
+    updatedBom[index] = { ...updatedBom[index], [field]: value };
+    setFormData({ ...formData, billOfMaterials: updatedBom });
+  };
+
+  const removeBomItem = (index: number) => {
+    const updatedBom = [...(formData.billOfMaterials || [])];
+    updatedBom.splice(index, 1);
+    setFormData({ ...formData, billOfMaterials: updatedBom });
+  };
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const paginatedProducts = products.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (loading) return <p>Cargando catálogo...</p>;
 
@@ -324,6 +369,35 @@ export const AdminCatalog: React.FC = () => {
                 )}
               </div>
 
+              {/* Bill of Materials Section */}
+              <div style={{ border: '1px solid var(--color-border)', padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.2)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h4 style={{ margin: 0, color: 'var(--color-primary)' }}>Insumos Asociados (BOM)</h4>
+                </div>
+                <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
+                  Añade materias primas a este producto. Se descontarán automáticamente del stock cuando un pedido de este producto sea enviado.
+                </p>
+                {formData.billOfMaterials?.map((bom, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', marginBottom: '0.8rem' }}>
+                    <div style={{ flex: 2 }}>
+                      <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.2rem' }}>Insumo</label>
+                      <select required className="search-input" value={bom.materialId} onChange={e => updateBomItem(idx, 'materialId', e.target.value)} style={{ padding: '0.3rem' }}>
+                        <option value="">Selecciona un insumo...</option>
+                        {materials.map(m => (
+                          <option key={m.id} value={m.id}>{m.name} ({m.unit})</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.2rem' }}>Cantidad (en su unidad)</label>
+                      <input required type="number" step="0.01" className="search-input" value={bom.quantity || 1} onChange={e => updateBomItem(idx, 'quantity', Number(e.target.value))} style={{ padding: '0.3rem' }} />
+                    </div>
+                    <button type="button" onClick={() => removeBomItem(idx)} style={{ padding: '0.4rem', background: 'transparent', border: '1px solid red', color: 'red', borderRadius: '4px', cursor: 'pointer' }}>✕</button>
+                  </div>
+                ))}
+                <button type="button" onClick={addBomItem} style={{ background: 'transparent', border: '1px dashed var(--color-primary)', color: 'var(--color-primary)', padding: '0.4rem 1rem', borderRadius: '20px', cursor: 'pointer', fontSize: '0.9rem', marginTop: '0.5rem' }}>+ Agregar Insumo</button>
+              </div>
+
               {!formData.hasVariations && (
                 <div style={{ display: 'flex', gap: '2rem', padding: '1rem', background: 'rgba(197, 168, 128, 0.1)', borderRadius: 'var(--radius-sm)' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -365,7 +439,7 @@ export const AdminCatalog: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {products.map(product => (
+            {paginatedProducts.map(product => (
               <tr key={product.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                 <td style={{ padding: '1rem' }}>
                   <div style={{ width: '50px', height: '50px', overflow: 'hidden', borderRadius: '4px', backgroundColor: 'var(--color-bg)' }}>
@@ -442,6 +516,12 @@ export const AdminCatalog: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      <AdminPagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

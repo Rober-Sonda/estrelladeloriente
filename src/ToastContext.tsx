@@ -32,7 +32,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       {children}
       <div style={toastContainerStyle}>
         {toasts.map((toast) => (
-          <div key={toast.id} style={{...toastStyle, ...(toast.type === 'error' ? errorStyle : toast.type === 'success' ? successStyle : infoStyle)}} className="glass-panel">
+          <div key={toast.id} style={{ ...toastStyle, ...(toast.type === 'error' ? errorStyle : toast.type === 'success' ? successStyle : infoStyle) }} className="glass-panel">
             {toast.message}
           </div>
         ))}
@@ -83,3 +83,5 @@ const errorStyle: React.CSSProperties = {
 const infoStyle: React.CSSProperties = {
   borderLeft: '4px solid var(--color-secondary)',
 };
+
+
