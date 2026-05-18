@@ -1,4 +1,4 @@
-﻿/* Navbar Styles */
+/* Navbar Styles */
 .navbar {
   position: fixed;
   top: 0;
@@ -55,6 +55,7 @@
   text-transform: uppercase;
   letter-spacing: 1px;
   position: relative;
+  white-space: nowrap;
 }
 
 .nav-link::after {

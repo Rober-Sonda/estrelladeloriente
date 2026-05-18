@@ -9,10 +9,12 @@ import { AdminOrders } from '../components/admin/AdminOrders';
 import { AdminMaterials } from '../components/admin/AdminMaterials';
 import { AdminClients } from '../components/admin/AdminClients';
 import { AIAssistant } from '../components/admin/AIAssistant';
+import { useToast } from '../ToastContext';
 
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'finances' | 'catalog' | 'categories' | 'settings' | 'orders' | 'materials' | 'clients' | 'assistant'>('orders');
   const [isMigrating, setIsMigrating] = useState(false);
+  const { showToast } = useToast();
 
   const handleMigration = async () => {
     if (!window.confirm('¿Estás seguro de migrar los productos estáticos a Firestore? Esto podría duplicar datos si ya lo hiciste.')) return;
@@ -44,10 +46,10 @@ export const AdminDashboard: React.FC = () => {
       for (const cat of defaultCategories) {
         await setDoc(doc(categoriesRef, cat.id), cat);
       }
-      alert('¡Migración de productos completada con éxito!');
+      showToast('¡Migración de productos completada con éxito!', 'success');
     } catch (error) {
       console.error("Error migrating data:", error);
-      alert('Hubo un error en la migración.');
+      showToast('Hubo un error en la migración.', 'error');
     } finally {
       setIsMigrating(false);
     }

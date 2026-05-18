@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../firebase';
-import { collection, query, orderBy, onSnapshot, doc, updateDoc, increment, addDoc, getDocs } from 'firebase/firestore';
-import { Clock, Package, CheckCircle, XCircle, AlertCircle, MessageCircle, Plus, Trash2 } from 'lucide-react';
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, increment, addDoc, getDocs, deleteDoc } from 'firebase/firestore';
+import { Clock, Package, CheckCircle, XCircle, AlertCircle, MessageCircle, Plus, Trash2, Edit, X } from 'lucide-react';
 import { AdminPagination } from './AdminPagination';
+import { useToast } from '../../ToastContext';
+import { ConfirmModal } from '../ConfirmModal';
+import { createPortal } from 'react-dom';
 
 export const AdminOrders: React.FC = () => {
   const [orders, setOrders] = useState<any[]>([]);
@@ -10,7 +13,10 @@ export const AdminOrders: React.FC = () => {
   
   // Manual Order State
   const [isCreatingManualOrder, setIsCreatingManualOrder] = useState(false);
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const [manualOrderForm, setManualOrderForm] = useState({ customerName: '', customerEmail: '', items: [] as any[], total: 0 });
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string, title: string, onConfirm: () => void } | null>(null);
+  const { showToast } = useToast();
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
   const [selectedProduct, setSelectedProduct] = useState('');
   const [selectedQuantity, setSelectedQuantity] = useState(1);
@@ -26,6 +32,14 @@ export const AdminOrders: React.FC = () => {
   useEffect(() => {
     const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === 'modified') {
+          const orderData = change.doc.data();
+          if (orderData.editedByClient) {
+            showToast(`¡El pedido de ${orderData.userName || 'un cliente'} fue editado!`, 'info');
+          }
+        }
+      });
       const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrders(ordersData);
     });
@@ -36,49 +50,133 @@ export const AdminOrders: React.FC = () => {
     const order = orders.find(o => o.id === orderId);
     if (!order) return;
 
-    if (!window.confirm(`¿Seguro que deseas cambiar el estado a ${newStatus}?`)) return;
-    try {
-      // Deduct materials if changing to shipped
-      if (newStatus === 'shipped' && order.status !== 'shipped') {
-        for (const item of order.items) {
-          if (item.billOfMaterials && item.billOfMaterials.length > 0) {
-            for (const bom of item.billOfMaterials) {
-              if (bom.materialId) {
-                const quantityToDeduct = bom.quantity * item.quantity;
-                const materialRef = doc(db, 'materials', bom.materialId);
-                try {
-                  await updateDoc(materialRef, {
-                    stock: increment(-quantityToDeduct)
-                  });
-                } catch (e) {
-                  console.error("Error deducting material:", e);
+    setConfirmDialog({
+      title: "Cambiar Estado",
+      message: `¿Seguro que deseas cambiar el estado a ${newStatus}?`,
+      onConfirm: async () => {
+        try {
+          // Restore materials if changing to cancelled from shipped or delivered
+          if (newStatus === 'cancelled' && (order.status === 'shipped' || order.status === 'delivered')) {
+            for (const item of order.items) {
+              if (item.billOfMaterials && item.billOfMaterials.length > 0) {
+                for (const bom of item.billOfMaterials) {
+                  if (bom.materialId) {
+                    const quantityToRestore = bom.quantity * item.quantity;
+                    const materialRef = doc(db, 'materials', bom.materialId);
+                    try {
+                      await updateDoc(materialRef, {
+                        stock: increment(quantityToRestore)
+                      });
+                    } catch (e) {
+                      console.error("Error restoring material:", e);
+                    }
+                  }
                 }
               }
             }
           }
+
+          // Deduct materials if changing to shipped
+          if (newStatus === 'shipped' && order.status !== 'shipped' && order.status !== 'delivered') {
+            for (const item of order.items) {
+              if (item.billOfMaterials && item.billOfMaterials.length > 0) {
+                for (const bom of item.billOfMaterials) {
+                  if (bom.materialId) {
+                    const quantityToDeduct = bom.quantity * item.quantity;
+                    const materialRef = doc(db, 'materials', bom.materialId);
+                    try {
+                      await updateDoc(materialRef, {
+                        stock: increment(-quantityToDeduct)
+                      });
+                    } catch (e) {
+                      console.error("Error deducting material:", e);
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          await updateDoc(doc(db, 'orders', orderId), {
+            status: newStatus,
+            editedByClient: false,
+            updatedAt: new Date().toISOString()
+          });
+          showToast(`Estado actualizado a ${newStatus}`, 'success');
+        } catch (error) {
+          console.error("Error updating order status:", error);
+          showToast("Error al actualizar el estado", "error");
         }
       }
-
-      await updateDoc(doc(db, 'orders', orderId), {
-        status: newStatus,
-        updatedAt: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error("Error updating order status:", error);
-      alert("Error al actualizar el estado");
-    }
+    });
   };
 
   const handleResolveClaim = async (orderId: string) => {
-    if (!window.confirm("¿Marcar este reclamo como resuelto?")) return;
-    try {
-      await updateDoc(doc(db, 'orders', orderId), {
-        'claim.status': 'resolved',
-        updatedAt: new Date().toISOString()
-      });
-    } catch (error) {
-      console.error("Error resolving claim:", error);
-      alert("Error al resolver el reclamo");
+    setConfirmDialog({
+      title: "Resolver Reclamo",
+      message: "¿Marcar este reclamo del cliente como resuelto?",
+      onConfirm: async () => {
+        try {
+          await updateDoc(doc(db, 'orders', orderId), {
+            'claim.status': 'resolved',
+            updatedAt: new Date().toISOString()
+          });
+          showToast("Reclamo marcado como resuelto", "success");
+        } catch (error) {
+          console.error("Error resolving claim:", error);
+          showToast("Error al resolver el reclamo", "error");
+        }
+      }
+    });
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) return;
+
+    setConfirmDialog({
+      title: "Eliminar Pedido",
+      message: "ATENCIÓN: ¿Seguro que deseas ELIMINAR permanentemente este pedido?\n\nIMPORTANTE: Si el pedido fue enviado y ahora lo eliminas por cancelación/devolución, su stock será restaurado automáticamente.",
+      onConfirm: async () => {
+        try {
+          if (order.status === 'shipped' || order.status === 'delivered') {
+            for (const item of order.items) {
+              if (item.billOfMaterials && item.billOfMaterials.length > 0) {
+                for (const bom of item.billOfMaterials) {
+                  if (bom.materialId) {
+                    const quantityToRestore = bom.quantity * item.quantity;
+                    try {
+                      await updateDoc(doc(db, 'materials', bom.materialId), { stock: increment(quantityToRestore) });
+                    } catch (e) { console.error("Error restoring material:", e); }
+                  }
+                }
+              }
+            }
+          }
+          await deleteDoc(doc(db, 'orders', orderId));
+          showToast("Pedido eliminado permanentemente", "success");
+        } catch (error) {
+          console.error("Error deleting order:", error);
+          showToast("Error al eliminar el pedido", "error");
+        }
+      }
+    });
+  };
+
+  const handleEditOrder = async (order: any) => {
+    setEditingOrderId(order.id);
+    setManualOrderForm({
+      customerName: order.userName || '',
+      customerEmail: order.userEmail || '',
+      items: order.items || [],
+      total: order.total || 0
+    });
+    setIsCreatingManualOrder(true);
+    
+    if (availableProducts.length === 0) {
+      const q = query(collection(db, 'products'), orderBy('name', 'asc'));
+      const snap = await getDocs(q);
+      setAvailableProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     }
   };
 
@@ -102,6 +200,8 @@ export const AdminOrders: React.FC = () => {
   const paginatedOrders = displayedOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const openManualOrderModal = async () => {
+    setEditingOrderId(null);
+    setManualOrderForm({ customerName: '', customerEmail: '', items: [], total: 0 });
     setIsCreatingManualOrder(true);
     if (availableProducts.length === 0) {
       const q = query(collection(db, 'products'), orderBy('name', 'asc'));
@@ -143,50 +243,63 @@ export const AdminOrders: React.FC = () => {
   const submitManualOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (manualOrderForm.items.length === 0) {
-      alert("Debes agregar al menos un producto al pedido.");
+      showToast("Debes agregar al menos un producto al pedido.", "error");
       return;
     }
 
     try {
-      const orderData = {
-        userId: 'manual_entry',
-        userEmail: manualOrderForm.customerEmail || 'No proporcionado',
-        userName: manualOrderForm.customerName || 'Cliente Manual',
-        items: manualOrderForm.items,
-        total: manualOrderForm.total,
-        status: 'delivered', // Assume manual orders are delivered directly
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        isManual: true
-      };
-      
-      await addDoc(collection(db, 'orders'), orderData);
-      
-      // Deduct materials if necessary (since status is 'delivered')
-      for (const item of manualOrderForm.items) {
-        if (item.billOfMaterials && item.billOfMaterials.length > 0) {
-          for (const bom of item.billOfMaterials) {
-            if (bom.materialId) {
-              const quantityToDeduct = bom.quantity * item.quantity;
-              const materialRef = doc(db, 'materials', bom.materialId);
-              try {
-                await updateDoc(materialRef, {
-                  stock: increment(-quantityToDeduct)
-                });
-              } catch (e) {
-                console.error("Error deducting material:", e);
+      if (editingOrderId) {
+        await updateDoc(doc(db, 'orders', editingOrderId), {
+          userName: manualOrderForm.customerName || 'Cliente Manual',
+          userEmail: manualOrderForm.customerEmail || 'No proporcionado',
+          items: manualOrderForm.items,
+          total: manualOrderForm.total,
+          editedByClient: false,
+          updatedAt: new Date().toISOString()
+        });
+        showToast("Pedido actualizado con éxito", "success");
+      } else {
+        const orderData = {
+          userId: 'manual_entry',
+          userEmail: manualOrderForm.customerEmail || 'No proporcionado',
+          userName: manualOrderForm.customerName || 'Cliente Manual',
+          items: manualOrderForm.items,
+          total: manualOrderForm.total,
+          status: 'delivered', // Assume manual orders are delivered directly
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          isManual: true
+        };
+        
+        await addDoc(collection(db, 'orders'), orderData);
+        
+        // Deduct materials if necessary (since status is 'delivered')
+        for (const item of manualOrderForm.items) {
+          if (item.billOfMaterials && item.billOfMaterials.length > 0) {
+            for (const bom of item.billOfMaterials) {
+              if (bom.materialId) {
+                const quantityToDeduct = bom.quantity * item.quantity;
+                const materialRef = doc(db, 'materials', bom.materialId);
+                try {
+                  await updateDoc(materialRef, {
+                    stock: increment(-quantityToDeduct)
+                  });
+                } catch (e) {
+                  console.error("Error deducting material:", e);
+                }
               }
             }
           }
         }
+        showToast("Pedido manual creado con éxito", "success");
       }
 
       setIsCreatingManualOrder(false);
+      setEditingOrderId(null);
       setManualOrderForm({ customerName: '', customerEmail: '', items: [], total: 0 });
-      alert("Pedido manual creado con éxito");
     } catch (error) {
-      console.error("Error creating manual order:", error);
-      alert("Hubo un error al crear el pedido");
+      console.error("Error saving order:", error);
+      showToast("Hubo un error al procesar el pedido", "error");
     }
   };
 
@@ -195,27 +308,39 @@ export const AdminOrders: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-primary)', margin: 0 }}>Gestión de Pedidos</h2>
         <button className="btn btn-primary" onClick={openManualOrderModal}>
-          <Plus size={20} style={{ marginRight: '0.5rem' }} /> Nuevo Pedido Manual
+          <Plus size={20} style={{ marginRight: '0.5rem' }} /> Nuevo Pedido
         </button>
       </div>
 
-      {isCreatingManualOrder && (
-        <div style={{ background: 'var(--color-surface)', padding: '1.5rem', borderRadius: 'var(--radius-md)', marginBottom: '2rem', border: '1px solid var(--color-border)' }}>
-          <h3 style={{ marginTop: 0, marginBottom: '1.5rem' }}>Registrar Venta Manual</h3>
+      {isCreatingManualOrder && createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div className="glass-panel modal-panel-responsive" style={{ position: 'relative', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(197, 168, 128, 0.3)', boxShadow: 'var(--shadow-md)' }}>
+            <button 
+              type="button"
+              onClick={() => { setIsCreatingManualOrder(false); setEditingOrderId(null); }} 
+              style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'background 0.2s' }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <X size={24} />
+            </button>
+            <h3 style={{ marginTop: 0, marginBottom: '2rem', fontFamily: 'var(--font-heading)', color: 'var(--color-primary)', fontSize: '1.5rem', borderBottom: '1px solid rgba(197, 168, 128, 0.2)', paddingBottom: '1rem', paddingRight: '2rem' }}>
+              {editingOrderId ? 'Editar Pedido Existente' : 'Nuevo Pedido'}
+            </h3>
           <form onSubmit={submitManualOrder}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2rem' }}>
+              <div style={{ flex: '1 1 200px' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Nombre del Cliente</label>
                 <input type="text" required value={manualOrderForm.customerName} onChange={e => setManualOrderForm({...manualOrderForm, customerName: e.target.value})} className="form-control" placeholder="Ej. Juan Pérez" />
               </div>
-              <div>
+              <div style={{ flex: '1 1 200px' }}>
                 <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Email / Teléfono (Opcional)</label>
                 <input type="text" value={manualOrderForm.customerEmail} onChange={e => setManualOrderForm({...manualOrderForm, customerEmail: e.target.value})} className="form-control" placeholder="Contacto" />
               </div>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: 'var(--radius-sm)', marginBottom: '1.5rem', border: '1px solid var(--color-border)' }}>
-              <h4 style={{ margin: '0 0 1rem 0' }}>Agregar Productos</h4>
+            <div style={{ background: 'rgba(255, 255, 255, 0.4)', padding: '1.5rem', borderRadius: 'var(--radius-md)', marginBottom: '2rem', border: '1px solid rgba(197, 168, 128, 0.15)' }}>
+              <h4 style={{ margin: '0 0 1.5rem 0', fontFamily: 'var(--font-heading)', color: 'var(--color-text)' }}>Agregar Productos</h4>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                 <div style={{ flex: 2, minWidth: '200px' }}>
                   <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.3rem' }}>Producto</label>
@@ -234,32 +359,34 @@ export const AdminOrders: React.FC = () => {
               </div>
 
               {manualOrderForm.items.length > 0 && (
-                <div style={{ marginTop: '1.5rem' }}>
-                  <h5 style={{ margin: '0 0 0.5rem 0' }}>Carrito del Cliente</h5>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <div style={{ marginTop: '2rem' }}>
+                  <h5 style={{ margin: '0 0 1rem 0', color: 'var(--color-text)' }}>Carrito del Cliente</h5>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                     {manualOrderForm.items.map((item, idx) => (
-                      <li key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem', borderBottom: '1px solid var(--color-border)' }}>
-                        <span>{item.quantity}x {item.name}</span>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <li key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--color-surface)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(197, 168, 128, 0.1)' }}>
+                        <span style={{ fontWeight: 500 }}>{item.quantity} × {item.name}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                           <span style={{ fontWeight: 'bold' }}>${(item.price * item.quantity).toLocaleString('es-AR')}</span>
                           <button type="button" onClick={() => removeManualItem(idx)} className="icon-btn" style={{ color: '#ef4444' }}><Trash2 size={16} /></button>
                         </div>
                       </li>
                     ))}
                   </ul>
-                  <div style={{ textAlign: 'right', marginTop: '1rem', fontSize: '1.2rem', fontWeight: 'bold' }}>
+                  <div style={{ textAlign: 'right', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '2px solid rgba(197, 168, 128, 0.2)', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>
                     Total: ${manualOrderForm.total.toLocaleString('es-AR')}
                   </div>
                 </div>
               )}
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-              <button type="button" className="btn btn-secondary" onClick={() => setIsCreatingManualOrder(false)}>Cancelar</button>
-              <button type="submit" className="btn btn-primary" disabled={manualOrderForm.items.length === 0}>Guardar Venta</button>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '2rem' }}>
+              <button type="button" className="btn btn-secondary" onClick={() => { setIsCreatingManualOrder(false); setEditingOrderId(null); }}>Cancelar</button>
+              <button type="submit" className="btn btn-primary" disabled={manualOrderForm.items.length === 0}>Guardar</button>
             </div>
           </form>
         </div>
+        </div>,
+        document.body
       )}
 
       <select 
@@ -296,11 +423,26 @@ export const AdminOrders: React.FC = () => {
               <div key={order.id} style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-sm)', padding: '1.5rem' }}>
                 <div className="order-card-header">
                   <div>
-                    <h3 style={{ margin: '0 0 0.2rem 0' }}>#{order.id.slice(0, 8).toUpperCase()} - {order.userName || 'Cliente Anónimo'}</h3>
+                    <h3 style={{ margin: '0 0 0.2rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      #{order.id.slice(0, 8).toUpperCase()} - {order.userName || 'Cliente Anónimo'}
+                      {order.editedByClient && (
+                        <span style={{fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: '#eab308', color: '#fff', borderRadius: '10px', display: 'inline-flex', alignItems: 'center', gap: '0.2rem'}}>
+                          <AlertCircle size={12} /> ¡Editado por el cliente!
+                        </span>
+                      )}
+                    </h3>
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>{order.userEmail}</p>
                     <p style={{ margin: '0.2rem 0 0 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
                       {new Date(order.createdAt).toLocaleString()}
                     </p>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '0.8rem' }}>
+                      <button onClick={() => handleEditOrder(order)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem', padding: 0 }}>
+                        <Edit size={14} /> Editar
+                      </button>
+                      <button onClick={() => handleDeleteOrder(order.id)} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.85rem', padding: 0 }}>
+                        <Trash2 size={14} /> Eliminar
+                      </button>
+                    </div>
                   </div>
                   <div className="order-card-actions">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.3rem 0.6rem', borderRadius: '20px', background: `${statusConfig.color}20`, color: statusConfig.color, fontWeight: 'bold', fontSize: '0.85rem' }}>
@@ -365,6 +507,17 @@ export const AdminOrders: React.FC = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmDialog}
+        title={confirmDialog?.title || ''}
+        message={confirmDialog?.message || ''}
+        onConfirm={() => {
+          if (confirmDialog) confirmDialog.onConfirm();
+          setConfirmDialog(null);
+        }}
+        onCancel={() => setConfirmDialog(null)}
       />
     </div>
   );

@@ -3,6 +3,8 @@ import { db } from '../../firebase';
 import { collection, doc, setDoc, deleteDoc, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { Plus, Edit2, Trash2, Package } from 'lucide-react';
 import { AdminPagination } from './AdminPagination';
+import { useToast } from '../../ToastContext';
+import { ConfirmModal } from '../ConfirmModal';
 
 export interface Material {
   id: string;
@@ -16,6 +18,8 @@ export const AdminMaterials: React.FC = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Material>({ id: '', name: '', unit: 'unidades', stock: 0, cost: 0 });
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string, title: string, onConfirm: () => void } | null>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const q = query(collection(db, 'materials'), orderBy('name', 'asc'));
@@ -38,19 +42,27 @@ export const AdminMaterials: React.FC = () => {
       });
       setIsEditing(false);
       setFormData({ id: '', name: '', unit: 'unidades', stock: 0, cost: 0 });
+      showToast(formData.id ? "Insumo actualizado" : "Insumo creado", "success");
     } catch (error) {
       console.error("Error saving material:", error);
-      alert("Error al guardar el insumo.");
+      showToast("Error al guardar el insumo.", "error");
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este insumo?")) return;
-    try {
-      await deleteDoc(doc(db, 'materials', id));
-    } catch (error) {
-      console.error("Error deleting material:", error);
-    }
+    setConfirmDialog({
+      title: "Eliminar Insumo",
+      message: "¿Seguro que deseas eliminar este insumo permanentemente?",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'materials', id));
+          showToast("Insumo eliminado", "success");
+        } catch (error) {
+          console.error("Error deleting material:", error);
+          showToast("Error al eliminar el insumo", "error");
+        }
+      }
+    });
   };
 
   // Pagination State
@@ -130,6 +142,17 @@ export const AdminMaterials: React.FC = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmDialog}
+        title={confirmDialog?.title || ''}
+        message={confirmDialog?.message || ''}
+        onConfirm={() => {
+          if (confirmDialog) confirmDialog.onConfirm();
+          setConfirmDialog(null);
+        }}
+        onCancel={() => setConfirmDialog(null)}
       />
     </div>
   );

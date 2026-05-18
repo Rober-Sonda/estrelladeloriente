@@ -1,54 +1,101 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, doc, updateDoc, orderBy } from 'firebase/firestore';
-import { Package, XCircle, AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { Package, XCircle, AlertCircle, Clock, CheckCircle, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '../ToastContext';
+import { useCart } from '../CartContext';
+import { useNavigate } from 'react-router-dom';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 export const MyOrders: React.FC = () => {
   const { user } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
+  const { clearCart, addToCart, setEditingOrderId } = useCart();
+  const navigate = useNavigate();
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string, title: string, onConfirm: () => void } | null>(null);
 
-  const fetchOrders = async () => {
-    if (!user) return;
-    try {
-      const q = query(
-        collection(db, 'orders'),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc')
-      );
-      const querySnapshot = await getDocs(q);
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    const q = query(
+      collection(db, 'orders'),
+      where('userId', '==', user.uid)
+    );
+    
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const ordersData = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      })).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setOrders(ordersData);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    } finally {
       setLoading(false);
-    }
-  };
+    }, (error) => {
+      console.error("Error fetching orders:", error);
+      setLoading(false);
+    });
 
-  useEffect(() => {
-    fetchOrders();
+    return () => unsubscribe();
   }, [user]);
 
   const handleCancelOrder = async (orderId: string) => {
-    if (!window.confirm('¿Estás seguro de que deseas cancelar este pedido?')) return;
-    try {
-      await updateDoc(doc(db, 'orders', orderId), {
-        status: 'cancelled',
-        updatedAt: new Date().toISOString()
-      });
-      showToast('Pedido cancelado exitosamente', 'success');
-      fetchOrders();
-    } catch (error) {
-      console.error("Error cancelling order:", error);
-      showToast('Hubo un error al cancelar el pedido', 'error');
-    }
+    setConfirmDialog({
+      title: "Cancelar Pedido",
+      message: "¿Estás seguro de que deseas cancelar este pedido?",
+      onConfirm: async () => {
+        try {
+          await updateDoc(doc(db, 'orders', orderId), {
+            status: 'cancelled',
+            updatedAt: new Date().toISOString()
+          });
+          showToast('Pedido cancelado exitosamente', 'success');
+        } catch (error) {
+          console.error("Error cancelling order:", error);
+          showToast('Hubo un error al cancelar el pedido', 'error');
+        }
+      }
+    });
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    setConfirmDialog({
+      title: "Eliminar Pedido",
+      message: "¿Estás seguro de eliminar este pedido permanentemente? Esta acción no se puede deshacer.",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'orders', orderId));
+          showToast('Pedido eliminado', 'success');
+        } catch (error) {
+          console.error("Error deleting order:", error);
+          showToast('Hubo un error al eliminar', 'error');
+        }
+      }
+    });
+  };
+
+  const handleEditOrder = async (order: any) => {
+    setConfirmDialog({
+      title: "Editar Pedido",
+      message: "Para editar, cargaremos los productos en tu carrito. Podrás modificarlos y guardar los cambios. ¿Deseas continuar?",
+      onConfirm: async () => {
+        try {
+          clearCart();
+          order.items.forEach((item: any) => {
+            addToCart(item, item.quantity, item.customBlendDetails, item.customBoxDetails);
+          });
+          if (setEditingOrderId) setEditingOrderId(order.id);
+          showToast('Pedido cargado en el carrito. Puedes modificarlo y guardar los cambios.', 'success');
+          navigate('/catalogo');
+        } catch (error) {
+          console.error("Error editing order:", error);
+          showToast('Error al intentar editar el pedido', 'error');
+        }
+      }
+    });
   };
 
   const handleCreateClaim = async (orderId: string) => {
@@ -64,7 +111,6 @@ export const MyOrders: React.FC = () => {
         updatedAt: new Date().toISOString()
       });
       showToast('Reclamo enviado exitosamente', 'success');
-      fetchOrders();
     } catch (error) {
       console.error("Error creating claim:", error);
       showToast('Hubo un error al enviar el reclamo', 'error');
@@ -107,12 +153,15 @@ export const MyOrders: React.FC = () => {
           {orders.map(order => {
             const statusConfig = getStatusConfig(order.status);
             return (
-              <div key={order.id} className="glass-panel" style={{ padding: '1.5rem', borderRadius: 'var(--radius-md)' }}>
+              <div key={order.id} className="glass-panel order-history-card" style={{ padding: '2rem', borderRadius: 'var(--radius-lg)', border: '1px solid rgba(197, 168, 128, 0.3)', boxShadow: 'var(--shadow-sm)', transition: 'all 0.3s ease' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '1px solid var(--color-border)', paddingBottom: '1rem', marginBottom: '1rem' }}>
                   <div>
-                    <h3 style={{ margin: '0 0 0.5rem 0', fontFamily: 'var(--font-heading)' }}>Pedido #{order.id.slice(0,8).toUpperCase()}</h3>
+                    <h3 style={{ margin: '0 0 0.4rem 0', fontFamily: 'var(--font-heading)', fontSize: '1.4rem', color: 'var(--color-primary)' }}>
+                      Pedido <span style={{ color: 'var(--color-secondary)' }}>#{order.id.slice(0,8).toUpperCase()}</span>
+                    </h3>
                     <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
-                      Fecha: {new Date(order.createdAt).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' })}
+                      <Clock size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
+                      {new Date(order.createdAt).toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' })}
                     </p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.8rem', borderRadius: '20px', background: `${statusConfig.color}20`, color: statusConfig.color, fontWeight: 'bold', fontSize: '0.9rem' }}>
@@ -121,19 +170,32 @@ export const MyOrders: React.FC = () => {
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '1.5rem' }}>
-                  <h4 style={{ marginBottom: '0.5rem' }}>Artículos:</h4>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <div style={{ marginBottom: '2rem' }}>
+                  <h4 style={{ marginBottom: '1rem', fontFamily: 'var(--font-heading)', color: 'var(--color-primary)', fontSize: '1.1rem' }}>Resumen de Artículos</h4>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                     {order.items.map((item: any, idx: number) => (
-                      <li key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: '1px dashed var(--color-border)' }}>
-                        <span>{item.quantity}x {item.name}</span>
-                        <span style={{ fontWeight: 'bold' }}>${(item.price * item.quantity).toLocaleString('es-AR')}</span>
-                      </li>
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.8rem 1rem', background: 'rgba(255, 255, 255, 0.5)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(197, 168, 128, 0.15)' }}>
+                        {item.image ? (
+                          <img src={item.image} alt={item.name} style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)' }} />
+                        ) : (
+                          <div style={{ width: '50px', height: '50px', background: 'var(--color-border)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Package size={24} color="var(--color-text-muted)" />
+                          </div>
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <h5 style={{ margin: '0 0 0.2rem 0', fontSize: '1rem', color: 'var(--color-text)' }}>{item.name}</h5>
+                          <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Cantidad: {item.quantity} × ${item.price.toLocaleString('es-AR')}</span>
+                        </div>
+                        <div style={{ fontWeight: 'bold', color: 'var(--color-primary)', fontSize: '1.1rem' }}>
+                          ${(item.price * item.quantity).toLocaleString('es-AR')}
+                        </div>
+                      </div>
                     ))}
-                  </ul>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', fontSize: '1.1rem', fontWeight: 'bold' }}>
-                    <span>Total:</span>
-                    <span style={{ color: 'var(--color-primary)' }}>${order.total.toLocaleString('es-AR')}</span>
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '2px solid rgba(197, 168, 128, 0.2)' }}>
+                    <span style={{ fontSize: '1rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 'bold' }}>Total a Pagar</span>
+                    <span style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'var(--color-primary)', fontFamily: 'var(--font-heading)' }}>${order.total.toLocaleString('es-AR')}</span>
                   </div>
                 </div>
 
@@ -147,15 +209,25 @@ export const MyOrders: React.FC = () => {
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                  {order.status === 'pending' && (
-                    <button onClick={() => handleCancelOrder(order.id)} className="btn btn-secondary" style={{ background: 'transparent', border: '1px solid #ef4444', color: '#ef4444' }}>
-                      Cancelar Pedido
+                <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'flex-end', flexWrap: 'wrap', paddingTop: '1rem' }}>
+                  {(order.status === 'pending' || order.status === 'processing') && (
+                    <>
+                      <button onClick={() => handleEditOrder(order)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', display: 'flex', gap: '0.4rem', alignItems: 'center', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 600 }}>
+                        <Edit size={16} /> Editar
+                      </button>
+                      <button onClick={() => handleDeleteOrder(order.id)} style={{ background: 'none', border: 'none', color: '#ef4444', display: 'flex', gap: '0.4rem', alignItems: 'center', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 600 }}>
+                        <Trash2 size={16} /> Eliminar
+                      </button>
+                    </>
+                  )}
+                  {order.status === 'cancelled' && (
+                    <button onClick={() => handleDeleteOrder(order.id)} style={{ background: 'none', border: 'none', color: '#ef4444', display: 'flex', gap: '0.4rem', alignItems: 'center', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 600 }}>
+                      <Trash2 size={16} /> Eliminar
                     </button>
                   )}
                   {order.status !== 'pending' && order.status !== 'cancelled' && !order.claim && (
-                    <button onClick={() => handleCreateClaim(order.id)} className="btn btn-secondary" style={{ background: 'transparent', border: '1px solid #f59e0b', color: '#f59e0b' }}>
-                      Abrir Reclamo
+                    <button onClick={() => handleCreateClaim(order.id)} style={{ background: 'none', border: 'none', color: '#f59e0b', display: 'flex', gap: '0.4rem', alignItems: 'center', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 600 }}>
+                      <AlertCircle size={16} /> Iniciar Reclamo
                     </button>
                   )}
                 </div>
@@ -163,6 +235,18 @@ export const MyOrders: React.FC = () => {
             );
           })}
         </div>
+      )}
+      {confirmDialog && (
+        <ConfirmModal 
+          isOpen={!!confirmDialog}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          onConfirm={() => {
+            confirmDialog.onConfirm();
+            setConfirmDialog(null);
+          }}
+          onCancel={() => setConfirmDialog(null)}
+        />
       )}
     </div>
   );

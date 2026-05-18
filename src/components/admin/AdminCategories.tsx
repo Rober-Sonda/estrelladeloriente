@@ -3,6 +3,8 @@ import { db } from '../../firebase';
 import { createPortal } from 'react-dom';
 import { collection, getDocs, updateDoc, doc, addDoc, deleteDoc } from 'firebase/firestore';
 import { AdminPagination } from './AdminPagination';
+import { useToast } from '../../ToastContext';
+import { ConfirmModal } from '../ConfirmModal';
 
 export interface DynamicCategory {
   id: string;
@@ -16,6 +18,8 @@ export const AdminCategories: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string, title: string, onConfirm: () => void } | null>(null);
+  const { showToast } = useToast();
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -28,7 +32,7 @@ export const AdminCategories: React.FC = () => {
       setCategories(cats);
     } catch (error: any) {
       console.error("Error fetching categories:", error);
-      alert("Error interno al cargar la base de datos: " + error.message);
+      showToast("Error interno al cargar la base de datos: " + error.message, "error");
     } finally {
       setLoading(false);
     }
@@ -41,7 +45,7 @@ export const AdminCategories: React.FC = () => {
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategoryName.trim()) {
-      alert("Por favor escribí el nombre de la categoría antes de apretar Agregar.");
+      showToast("Por favor escribí el nombre de la categoría antes de apretar Agregar.", "error");
       return;
     }
     try {
@@ -53,10 +57,10 @@ export const AdminCategories: React.FC = () => {
       setNewCategoryName('');
       setIsModalOpen(false);
       fetchCategories();
-      alert('Categoría agregada con éxito');
+      showToast('Categoría agregada con éxito', "success");
     } catch (error: any) {
       console.error("Error adding category:", error);
-      alert('Hubo un error al agregar la categoría: ' + error.message);
+      showToast('Hubo un error al agregar la categoría: ' + error.message, "error");
     }
   };
 
@@ -66,7 +70,7 @@ export const AdminCategories: React.FC = () => {
   const submitSubcategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!subModalCatId || !newSubCategoryName.trim()) {
-      alert("Por favor escribí el nombre de la subcategoría.");
+      showToast("Por favor escribí el nombre de la subcategoría.", "error");
       return;
     }
     
@@ -80,33 +84,47 @@ export const AdminCategories: React.FC = () => {
       setNewSubCategoryName('');
       setSubModalCatId(null);
       fetchCategories();
-      alert('Subcategoría agregada con éxito');
+      showToast('Subcategoría agregada con éxito', 'success');
     } catch (error: any) {
       console.error("Error adding subcategory:", error);
-      alert('Hubo un error al agregar la subcategoría: ' + error.message);
+      showToast('Hubo un error al agregar la subcategoría: ' + error.message, 'error');
     }
   };
 
   const handleDeleteSubcategory = async (catId: string, currentSubs: string[], subToDelete: string) => {
-    if (!window.confirm(`¿Eliminar la subcategoría "${subToDelete}"?`)) return;
-    try {
-      await updateDoc(doc(db, 'categories', catId), {
-        subCategories: currentSubs.filter(sub => sub !== subToDelete)
-      });
-      fetchCategories();
-    } catch (error) {
-      console.error("Error deleting subcategory:", error);
-    }
+    setConfirmDialog({
+      title: "Eliminar Subcategoría",
+      message: `¿Eliminar la subcategoría "${subToDelete}"?`,
+      onConfirm: async () => {
+        try {
+          await updateDoc(doc(db, 'categories', catId), {
+            subCategories: currentSubs.filter(sub => sub !== subToDelete)
+          });
+          fetchCategories();
+          showToast("Subcategoría eliminada", "success");
+        } catch (error: any) {
+          console.error("Error deleting subcategory:", error);
+          showToast("Error al eliminar subcategoría: " + error.message, "error");
+        }
+      }
+    });
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    if (!window.confirm("¿Estás seguro de eliminar esta categoría completa?")) return;
-    try {
-      await deleteDoc(doc(db, 'categories', id));
-      fetchCategories();
-    } catch (error) {
-      console.error("Error deleting category:", error);
-    }
+  const handleDeleteCategory = async (catId: string) => {
+    setConfirmDialog({
+      title: "Eliminar Categoría",
+      message: "¿Estás seguro de que deseas eliminar esta categoría permanentemente?",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'categories', catId));
+          fetchCategories();
+          showToast("Categoría eliminada", "success");
+        } catch (error: any) {
+          console.error("Error deleting category:", error);
+          showToast("Error al eliminar categoría: " + error.message, "error");
+        }
+      }
+    });
   };
 
   // Pagination State
@@ -206,6 +224,17 @@ export const AdminCategories: React.FC = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
+      />
+
+      <ConfirmModal
+        isOpen={!!confirmDialog}
+        title={confirmDialog?.title || ''}
+        message={confirmDialog?.message || ''}
+        onConfirm={() => {
+          if (confirmDialog) confirmDialog.onConfirm();
+          setConfirmDialog(null);
+        }}
+        onCancel={() => setConfirmDialog(null)}
       />
     </div>
   );

@@ -4,6 +4,9 @@ import { createPortal } from 'react-dom';
 import { collection, getDocs, updateDoc, doc, addDoc, deleteDoc } from 'firebase/firestore';
 import type { Product, ProductVariation } from '../../data/products';
 import { AdminPagination } from './AdminPagination';
+import { useToast } from '../../ToastContext';
+import { ConfirmModal } from '../ConfirmModal';
+import { X } from 'lucide-react';
 
 export interface DynamicCategory {
   id: string;
@@ -21,6 +24,8 @@ export const AdminCatalog: React.FC = () => {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string, title: string, onConfirm: () => void } | null>(null);
+  const { showToast } = useToast();
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
     description: '',
@@ -143,20 +148,28 @@ export const AdminCatalog: React.FC = () => {
       }
       handleCloseModal();
       fetchProducts();
+      showToast(editingId ? "Producto actualizado con éxito" : "Producto creado con éxito", "success");
     } catch (error) {
       console.error("Error saving product:", error);
-      alert("Hubo un error al guardar los cambios.");
+      showToast("Hubo un error al guardar los cambios.", "error");
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("¿Estás seguro de eliminar este producto? Se borrará permanentemente de la base de datos.")) return;
-    try {
-      await deleteDoc(doc(db, 'products', id));
-      fetchProducts();
-    } catch (error) {
-      console.error("Error deleting product:", error);
-    }
+    setConfirmDialog({
+      title: "Eliminar Producto",
+      message: "¿Estás seguro de eliminar este producto? Se borrará permanentemente de la base de datos.",
+      onConfirm: async () => {
+        try {
+          await deleteDoc(doc(db, 'products', id));
+          fetchProducts();
+          showToast("Producto eliminado", "success");
+        } catch (error) {
+          console.error("Error deleting product:", error);
+          showToast("Error al eliminar el producto", "error");
+        }
+      }
+    });
   };
 
   const toggleDiscontinued = async (id: string, currentStatus: boolean) => {
@@ -230,35 +243,43 @@ export const AdminCatalog: React.FC = () => {
 
       {isModalOpen && createPortal(
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '1rem' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '700px', padding: '2rem', borderRadius: 'var(--radius-lg)', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ marginTop: 0, color: 'var(--color-primary)' }}>{editingId ? 'Editar Producto' : 'Nuevo Producto'}</h3>
+          <div className="glass-panel modal-panel-responsive" style={{ position: 'relative', width: '100%', maxWidth: '700px', borderRadius: 'var(--radius-lg)', maxHeight: '90vh', overflowY: 'auto' }}>
+            <button 
+              onClick={handleCloseModal} 
+              style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', transition: 'background 0.2s' }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <X size={24} />
+            </button>
+            <h3 style={{ marginTop: 0, color: 'var(--color-primary)', paddingRight: '2rem' }}>{editingId ? 'Editar Producto' : 'Nuevo Producto'}</h3>
             <form onSubmit={handleSaveProduct} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               
               <div>
                 <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Nombre</label>
-                <input required type="text" className="search-input" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} />
+                <input required type="text" className="form-control" value={formData.name || ''} onChange={e => setFormData({...formData, name: e.target.value})} />
               </div>
               
               <div>
                 <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>Descripción</label>
-                <textarea required className="search-input" style={{ minHeight: '80px', borderRadius: 'var(--radius-sm)' }} value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
+                <textarea required className="form-control" style={{ minHeight: '80px', borderRadius: 'var(--radius-sm)' }} value={formData.description || ''} onChange={e => setFormData({...formData, description: e.target.value})} />
               </div>
               
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                 <div style={{ flex: '1 1 200px' }}>
                   <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem' }}>URL de Imagen</label>
-                  <input required type="text" className="search-input" value={formData.image || ''} onChange={e => setFormData({...formData, image: e.target.value})} />
+                  <input required type="text" className="form-control" value={formData.image || ''} onChange={e => setFormData({...formData, image: e.target.value})} />
                 </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid var(--color-border)', padding: '1rem', borderRadius: 'var(--radius-sm)' }}>
                 <label style={{ display: 'block', fontSize: '0.9rem', marginBottom: '0.3rem', fontWeight: 'bold' }}>Categorías y Subcategorías</label>
                 {dynamicCategories.length === 0 ? <p style={{fontSize: '0.8rem', color: 'var(--color-text-muted)'}}>No hay categorías creadas. Ve a Configuración &gt; Gestión de Categorías.</p> : null}
-                <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                   {dynamicCategories.map(cat => {
                     const isCatChecked = (formData.categories || []).includes(cat.name);
                     return (
-                      <div key={cat.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', minWidth: '150px', background: 'var(--color-bg-alt)', padding: '1rem', borderRadius: 'var(--radius-sm)' }}>
+                      <div key={cat.id} style={{ flex: '1 1 130px', display: 'flex', flexDirection: 'column', gap: '0.8rem', minWidth: '130px', background: 'var(--color-bg-alt)', padding: '1rem', borderRadius: 'var(--radius-sm)' }}>
                         <label style={{ display: 'inline-flex', alignItems: 'center', cursor: 'pointer' }}>
                           <input 
                             type="checkbox" 
@@ -335,33 +356,33 @@ export const AdminCatalog: React.FC = () => {
                 </div>
 
                 {!formData.hasVariations ? (
-                  <div style={{ display: 'flex', gap: '1rem' }}>
-                    <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 120px' }}>
                       <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--color-text-muted)' }}>Precio de Venta ($)</label>
-                      <input required={!formData.hasVariations} type="number" className="search-input" value={formData.price || 0} onChange={e => setFormData({...formData, price: Number(e.target.value)})} style={{ padding: '0.4rem' }} />
+                      <input required={!formData.hasVariations} type="number" className="form-control" value={formData.price || 0} onChange={e => setFormData({...formData, price: Number(e.target.value)})} style={{ padding: '0.4rem' }} />
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: '1 1 120px' }}>
                       <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--color-text-muted)' }}>Precio de Costo ($)</label>
-                      <input required={!formData.hasVariations} type="number" className="search-input" value={formData.costPrice || 0} onChange={e => setFormData({...formData, costPrice: Number(e.target.value)})} style={{ padding: '0.4rem' }} />
+                      <input required={!formData.hasVariations} type="number" className="form-control" value={formData.costPrice || 0} onChange={e => setFormData({...formData, costPrice: Number(e.target.value)})} style={{ padding: '0.4rem' }} />
                     </div>
                   </div>
                 ) : (
                   <div>
                     {formData.variations?.map((v) => (
-                      <div key={v.id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', marginBottom: '0.8rem' }}>
-                        <div style={{ flex: 2 }}>
+                      <div key={v.id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', marginBottom: '1rem', flexWrap: 'wrap', background: 'rgba(0,0,0,0.03)', padding: '0.5rem', borderRadius: '8px' }}>
+                        <div style={{ flex: '1 1 150px' }}>
                           <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.2rem' }}>Tamaño/Ración (ej. 50g)</label>
-                          <input required type="text" className="search-input" value={v.name} onChange={e => updateVariation(v.id, 'name', e.target.value)} style={{ padding: '0.3rem' }} />
+                          <input required type="text" className="form-control" value={v.name} onChange={e => updateVariation(v.id, 'name', e.target.value)} style={{ padding: '0.3rem' }} />
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: '1 1 80px' }}>
                           <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.2rem' }}>Venta ($)</label>
-                          <input required type="number" className="search-input" value={v.price || 0} onChange={e => updateVariation(v.id, 'price', Number(e.target.value))} style={{ padding: '0.3rem' }} />
+                          <input required type="number" className="form-control" value={v.price || 0} onChange={e => updateVariation(v.id, 'price', Number(e.target.value))} style={{ padding: '0.3rem' }} />
                         </div>
-                        <div style={{ flex: 1 }}>
+                        <div style={{ flex: '1 1 80px' }}>
                           <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.2rem' }}>Costo ($)</label>
-                          <input required type="number" className="search-input" value={v.costPrice || 0} onChange={e => updateVariation(v.id, 'costPrice', Number(e.target.value))} style={{ padding: '0.3rem' }} />
+                          <input required type="number" className="form-control" value={v.costPrice || 0} onChange={e => updateVariation(v.id, 'costPrice', Number(e.target.value))} style={{ padding: '0.3rem' }} />
                         </div>
-                        <button type="button" onClick={() => removeVariation(v.id)} style={{ padding: '0.4rem', background: 'transparent', border: '1px solid red', color: 'red', borderRadius: '4px', cursor: 'pointer' }}>✕</button>
+                        <button type="button" onClick={() => removeVariation(v.id)} style={{ padding: '0.4rem 0.8rem', background: '#fee2e2', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', flexShrink: 0 }}>✕ Eliminar</button>
                       </div>
                     ))}
                     <button type="button" onClick={addVariation} style={{ background: 'transparent', border: '1px dashed var(--color-primary)', color: 'var(--color-primary)', padding: '0.4rem 1rem', borderRadius: '20px', cursor: 'pointer', fontSize: '0.9rem', marginTop: '0.5rem' }}>+ Agregar Opción</button>
@@ -378,21 +399,21 @@ export const AdminCatalog: React.FC = () => {
                   Añade materias primas a este producto. Se descontarán automáticamente del stock cuando un pedido de este producto sea enviado.
                 </p>
                 {formData.billOfMaterials?.map((bom, idx) => (
-                  <div key={idx} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', marginBottom: '0.8rem' }}>
-                    <div style={{ flex: 2 }}>
+                  <div key={idx} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', marginBottom: '1rem', flexWrap: 'wrap', background: 'rgba(0,0,0,0.03)', padding: '0.5rem', borderRadius: '8px' }}>
+                    <div style={{ flex: '1 1 200px' }}>
                       <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.2rem' }}>Insumo</label>
-                      <select required className="search-input" value={bom.materialId} onChange={e => updateBomItem(idx, 'materialId', e.target.value)} style={{ padding: '0.3rem' }}>
+                      <select required className="form-control" value={bom.materialId} onChange={e => updateBomItem(idx, 'materialId', e.target.value)} style={{ padding: '0.3rem' }}>
                         <option value="">Selecciona un insumo...</option>
                         {materials.map(m => (
                           <option key={m.id} value={m.id}>{m.name} ({m.unit})</option>
                         ))}
                       </select>
                     </div>
-                    <div style={{ flex: 1 }}>
+                    <div style={{ flex: '1 1 100px' }}>
                       <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.2rem' }}>Cantidad (en su unidad)</label>
-                      <input required type="number" step="0.01" className="search-input" value={bom.quantity || 1} onChange={e => updateBomItem(idx, 'quantity', Number(e.target.value))} style={{ padding: '0.3rem' }} />
+                      <input required type="number" step="0.01" className="form-control" value={bom.quantity || 1} onChange={e => updateBomItem(idx, 'quantity', Number(e.target.value))} style={{ padding: '0.3rem' }} />
                     </div>
-                    <button type="button" onClick={() => removeBomItem(idx)} style={{ padding: '0.4rem', background: 'transparent', border: '1px solid red', color: 'red', borderRadius: '4px', cursor: 'pointer' }}>✕</button>
+                    <button type="button" onClick={() => removeBomItem(idx)} style={{ padding: '0.4rem 0.8rem', background: '#fee2e2', border: '1px solid #ef4444', color: '#ef4444', borderRadius: '4px', cursor: 'pointer', flexShrink: 0 }}>✕ Eliminar</button>
                   </div>
                 ))}
                 <button type="button" onClick={addBomItem} style={{ background: 'transparent', border: '1px dashed var(--color-primary)', color: 'var(--color-primary)', padding: '0.4rem 1rem', borderRadius: '20px', cursor: 'pointer', fontSize: '0.9rem', marginTop: '0.5rem' }}>+ Agregar Insumo</button>
@@ -416,9 +437,9 @@ export const AdminCatalog: React.FC = () => {
                 </div>
               )}
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>
                 <button type="button" className="btn btn-secondary" onClick={handleCloseModal}>Cancelar</button>
-                <button type="submit" className="btn btn-primary">Guardar Producto</button>
+                <button type="submit" className="btn btn-primary">Guardar</button>
               </div>
             </form>
           </div>
@@ -521,6 +542,17 @@ export const AdminCatalog: React.FC = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
+      />
+      
+      <ConfirmModal
+        isOpen={!!confirmDialog}
+        title={confirmDialog?.title || ''}
+        message={confirmDialog?.message || ''}
+        onConfirm={() => {
+          if (confirmDialog) confirmDialog.onConfirm();
+          setConfirmDialog(null);
+        }}
+        onCancel={() => setConfirmDialog(null)}
       />
     </div>
   );

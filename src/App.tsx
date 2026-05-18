@@ -15,6 +15,7 @@ import './App.css';
 function App() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isMyOrdersRoute = location.pathname.startsWith('/mis-pedidos');
 
   return (
     <>
@@ -30,7 +31,7 @@ function App() {
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         </Routes>
       </main>
-      {!isAdminRoute && <Footer />}
+      {(!isAdminRoute && !isMyOrdersRoute) && <Footer />}
     </>
   );
 }

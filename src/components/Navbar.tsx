@@ -33,11 +33,11 @@ export const Navbar: React.FC = () => {
           <div className="nav-links">
             <Link to="/" className="nav-link">Inicio</Link>
             <Link to="/catalogo" className="nav-link">Catálogo</Link>
-            <Link to="/crea-tu-blend" className="nav-link">Crea tu Blend</Link>
-            <Link to="/arma-tu-box" className="nav-link">Armá tu Box</Link>
+            <Link to="/crea-tu-blend" className="nav-link">Tu Blend</Link>
+            <Link to="/arma-tu-box" className="nav-link">Tu Box</Link>
             <Link to="/ruta-del-te" className="nav-link">Ruta del Té</Link>
             {user && (
-              <Link to="/mis-pedidos" className="nav-link" style={{ color: 'var(--color-primary)' }}>Mis Pedidos</Link>
+              <Link to="/mis-pedidos" className="nav-link" style={{ color: 'var(--color-primary)' }}>Pedidos</Link>
             )}
             {isAdmin && (
               <Link to="/admin" className="nav-link" style={{ color: 'var(--color-secondary)' }}>Admin</Link>
@@ -88,11 +88,11 @@ export const Navbar: React.FC = () => {
           <div className="mobile-nav-links">
             <Link to="/" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Inicio</Link>
             <Link to="/catalogo" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Catálogo</Link>
-            <Link to="/crea-tu-blend" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Crea tu Blend</Link>
-            <Link to="/arma-tu-box" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Armá tu Box</Link>
+            <Link to="/crea-tu-blend" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Tu Blend</Link>
+            <Link to="/arma-tu-box" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Tu Box</Link>
             <Link to="/ruta-del-te" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Ruta del Té</Link>
             {user && (
-              <Link to="/mis-pedidos" className="nav-link" style={{ color: 'var(--color-primary)' }} onClick={() => setIsMobileMenuOpen(false)}>Mis Pedidos</Link>
+              <Link to="/mis-pedidos" className="nav-link" style={{ color: 'var(--color-primary)' }} onClick={() => setIsMobileMenuOpen(false)}>Pedidos</Link>
             )}
             {isAdmin && (
               <Link to="/admin" className="nav-link" style={{ color: 'var(--color-secondary)' }} onClick={() => setIsMobileMenuOpen(false)}>Admin</Link>

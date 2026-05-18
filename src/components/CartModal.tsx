@@ -3,7 +3,8 @@ import { X, Minus, Plus, ShoppingBag, Save, LogIn } from 'lucide-react';
 import { useCart } from '../CartContext';
 import { useAuth } from '../AuthContext';
 import { db } from '../firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { useToast } from '../ToastContext';
 
 interface CartModalProps {
   isOpen: boolean;
@@ -11,8 +12,9 @@ interface CartModalProps {
 }
 
 export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
-  const { items, updateQuantity, removeFromCart, total, clearCart, saveCartForLater, isSaving } = useCart();
+  const { items, updateQuantity, removeFromCart, total, clearCart, saveCartForLater, isSaving, editingOrderId, setEditingOrderId } = useCart();
   const { user, login } = useAuth();
+  const { showToast } = useToast();
 
   if (!isOpen) return null;
 
@@ -20,11 +22,44 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
     if (items.length === 0) return;
 
     if (!user) {
-      alert("Por favor, inicia sesión para poder realizar el pedido.");
+      showToast("Por favor, inicia sesión para poder realizar el pedido.", "error");
       return;
     }
 
     try {
+      if (editingOrderId) {
+        await updateDoc(doc(db, 'orders', editingOrderId), {
+          items: items,
+          total: total,
+          updatedAt: new Date().toISOString(),
+          editedByClient: true,
+          status: 'pending' // Regresa a pending para que el admin lo revise
+        });
+
+        let message = `Hola! He modificado mi pedido (ID: ${editingOrderId}):%0A%0A`;
+        items.forEach(item => {
+          message += `- ${item.quantity}x ${item.name} ($${(item.price * item.quantity).toLocaleString('es-AR')})%0A`;
+          if (item.customBlendDetails) {
+            message += `  Base: ${item.customBlendDetails.base}%0A  Ingredientes: ${item.customBlendDetails.ingredients.join(', ')}%0A`;
+          }
+          if (item.customBoxDetails) {
+            message += `  Caja: ${item.customBoxDetails.boxType}%0A  Contiene: ${item.customBoxDetails.items.map(i => i.name).join(', ')}%0A`;
+          }
+        });
+        
+        message += `%0A*Nuevo Total: $${total.toLocaleString('es-AR')}*%0A%0A`;
+        message += `Por favor, confirmen cuando puedan. ¡Gracias!`;
+
+        const whatsappUrl = `https://wa.me/5492317472432?text=${message}`;
+        window.open(whatsappUrl, '_blank');
+        
+        clearCart();
+        setEditingOrderId(null);
+        showToast("Cambios guardados con éxito", "success");
+        onClose();
+        return;
+      }
+
       const orderData = {
         userId: user.uid,
         userEmail: user.email,
@@ -59,10 +94,11 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
       window.open(whatsappUrl, '_blank');
       
       clearCart();
+      showToast("¡Pedido realizado con éxito!", "success");
       onClose();
     } catch (error) {
       console.error("Error creating order", error);
-      alert("Hubo un error al procesar tu pedido. Inténtalo nuevamente.");
+      showToast("Hubo un error al procesar tu pedido. Inténtalo nuevamente.", "error");
     }
   };
 
@@ -135,7 +171,7 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose }) => {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <button className="btn btn-primary" style={{ width: '100%', padding: '1rem' }} onClick={handleCheckout}>
-                  Confirmar y Pedir por WhatsApp
+                  {editingOrderId ? 'Guardar Cambios y Notificar' : 'Confirmar y Pedir por WhatsApp'}
                 </button>
                 <button 
                   className="btn btn-secondary" 

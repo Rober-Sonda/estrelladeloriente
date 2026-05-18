@@ -198,14 +198,14 @@ export const Catalog: React.FC = () => {
               <h3 className="product-title" style={{ marginTop: '0.8rem', fontSize: '1.4rem' }}>{product.name}</h3>
               <p className="product-desc" style={{ fontSize: '0.95rem' }}>{product.description}</p>
               
-              <div className="product-footer" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1rem', marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <div className="product-footer">
                 
                 {product.hasVariations && product.variations && product.variations.length > 0 ? (
                   <>
-                    <span className="product-price" style={{ fontSize: '1.25rem', color: 'var(--color-primary)' }}>
+                    <span className="product-price" style={{ fontSize: '1.25rem', color: 'var(--color-primary)', fontWeight: 'bold' }}>
                       Desde ${Math.min(...product.variations.map(v => v.price))}
                     </span>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', flex: '1 1 auto', justifyContent: 'flex-end' }}>
                       <select 
                         id={`var-${product.id}`}
                         className="filter-select" 
@@ -239,21 +239,21 @@ export const Catalog: React.FC = () => {
                     </div>
                   </>
                 ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <>
                     {/*@ts-ignore*/}
                     {product.isOnSale ? (
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         {/*@ts-ignore*/}
-                        <span className="product-price" style={{ fontSize: '1.25rem', color: 'var(--color-primary)' }}>${product.salePrice}</span>
+                        <span className="product-price" style={{ fontSize: '1.25rem', color: 'var(--color-primary)', fontWeight: 'bold' }}>${product.salePrice}</span>
                         <span style={{ fontSize: '0.85rem', textDecoration: 'line-through', color: 'var(--color-text-muted)' }}>${product.price}</span>
                       </div>
                     ) : (
-                      <span className="product-price" style={{ fontSize: '1.25rem' }}>${product.price}</span>
+                      <span className="product-price" style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>${product.price}</span>
                     )}
                     <button className="btn btn-primary" style={{ padding: '0.6rem 1.2rem', borderRadius: 'var(--radius-md)' }} onClick={() => addToCart(product)}>
                       Agregar
                     </button>
-                  </div>
+                  </>
                 )}
                 
               </div>

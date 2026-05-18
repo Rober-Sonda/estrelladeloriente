@@ -33,6 +33,8 @@ interface CartContextType {
   total: number;
   saveCartForLater: () => Promise<void>;
   isSaving: boolean;
+  editingOrderId: string | null;
+  setEditingOrderId: (id: string | null) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -42,6 +44,7 @@ const generateCartId = () => Math.random().toString(36).substr(2, 9);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
   const { user } = useAuth();
   const { showToast } = useToast();
 
@@ -136,7 +139,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
   return (
-    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, total, saveCartForLater, isSaving }}>
+    <CartContext.Provider value={{ items, addToCart, removeFromCart, updateQuantity, clearCart, total, saveCartForLater, isSaving, editingOrderId, setEditingOrderId }}>
       {children}
     </CartContext.Provider>
   );
