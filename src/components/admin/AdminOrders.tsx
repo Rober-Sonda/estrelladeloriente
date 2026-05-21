@@ -453,7 +453,7 @@ export const AdminOrders: React.FC = () => {
                     <select
                       value={order.status}
                       onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                      style={{ padding: '0.3rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', fontSize: '0.85rem', background: 'var(--color-bg)' }}
+                      style={{ padding: '0.3rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--color-border)', fontSize: '0.85rem', background: 'var(--color-bg)', color: 'var(--color-text)' }}
                     >
                       <option value="pending">Pendiente</option>
                       <option value="processing">Procesando</option>
