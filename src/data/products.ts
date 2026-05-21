@@ -31,6 +31,8 @@ export interface Product {
   salePrice?: number | null;
   createdAt?: string;
   billOfMaterials?: BillOfMaterialItem[];
+  stock?: number;
+  minStock?: number;
 }
 
 const adjectives = ['Premium', 'Imperial', 'Artesanal', 'Silvestre', 'Energía', 'Místico', 'Oriental', 'Serenidad', 'Floral'];

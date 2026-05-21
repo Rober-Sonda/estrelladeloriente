@@ -11,13 +11,14 @@ export interface Material {
   name: string;
   unit: string; // e.g. 'unidades', 'gramos', 'kilos'
   stock: number;
+  minStock?: number;
   cost: number;
 }
 
 export const AdminMaterials: React.FC = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<Material>({ id: '', name: '', unit: 'unidades', stock: 0, cost: 0 });
+  const [formData, setFormData] = useState<Material>({ id: '', name: '', unit: 'unidades', stock: 0, minStock: 10, cost: 0 });
   const [confirmDialog, setConfirmDialog] = useState<{ message: string, title: string, onConfirm: () => void } | null>(null);
   const { showToast } = useToast();
 
@@ -38,10 +39,11 @@ export const AdminMaterials: React.FC = () => {
         name: formData.name,
         unit: formData.unit,
         stock: Number(formData.stock),
+        minStock: Number(formData.minStock || 10),
         cost: Number(formData.cost)
       });
       setIsEditing(false);
-      setFormData({ id: '', name: '', unit: 'unidades', stock: 0, cost: 0 });
+      setFormData({ id: '', name: '', unit: 'unidades', stock: 0, minStock: 10, cost: 0 });
       showToast(formData.id ? "Insumo actualizado" : "Insumo creado", "success");
     } catch (error) {
       console.error("Error saving material:", error);
@@ -103,6 +105,10 @@ export const AdminMaterials: React.FC = () => {
               <input required type="number" step="0.01" value={formData.stock} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} className="form-control" />
             </div>
             <div className="form-group">
+              <label>Stock Mínimo (Alerta)</label>
+              <input required type="number" step="0.01" value={formData.minStock || 10} onChange={e => setFormData({...formData, minStock: Number(e.target.value)})} className="form-control" />
+            </div>
+            <div className="form-group">
               <label>Costo Unitario ($)</label>
               <input required type="number" step="0.01" value={formData.cost} onChange={e => setFormData({...formData, cost: Number(e.target.value)})} className="form-control" />
             </div>
@@ -130,7 +136,7 @@ export const AdminMaterials: React.FC = () => {
                 </div>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
-                <span>Stock: <strong style={{ color: mat.stock < 10 ? '#ef4444' : 'inherit' }}>{mat.stock} {mat.unit}</strong></span>
+                <span>Stock: <strong style={{ color: mat.stock < (mat.minStock || 10) ? '#ef4444' : 'inherit' }}>{mat.stock} {mat.unit}</strong></span>
                 <span>Costo: ${mat.cost} c/u</span>
               </div>
             </div>

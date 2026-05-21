@@ -42,7 +42,9 @@ export const AdminCatalog: React.FC = () => {
     isOnSale: false,
     // @ts-ignore
     salePrice: 0,
-    billOfMaterials: []
+    billOfMaterials: [],
+    stock: 0,
+    minStock: 5
   });
 
   const fetchProducts = async () => {
@@ -103,7 +105,9 @@ export const AdminCatalog: React.FC = () => {
         costPrice: product.costPrice || 0,
         hasVariations: product.hasVariations || false,
         variations: product.variations || [],
-        billOfMaterials: product.billOfMaterials || []
+        billOfMaterials: product.billOfMaterials || [],
+        stock: product.stock || 0,
+        minStock: product.minStock || 5
       });
     } else {
       setEditingId(null);
@@ -123,7 +127,9 @@ export const AdminCatalog: React.FC = () => {
         isOnSale: false,
         // @ts-ignore
         salePrice: 0,
-        billOfMaterials: []
+        billOfMaterials: [],
+        stock: 0,
+        minStock: 5
       });
     }
     setIsModalOpen(true);
@@ -345,6 +351,23 @@ export const AdminCatalog: React.FC = () => {
                 </div>
               </div>
 
+              </div>
+
+              {/* Inventory Section */}
+              <div style={{ border: '1px solid var(--color-border)', padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-alt)' }}>
+                <h4 style={{ margin: '0 0 1rem 0', color: 'var(--color-primary)' }}>Inventario</h4>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 120px' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--color-text-muted)' }}>Stock Disponible</label>
+                    <input type="number" className="form-control" value={formData.stock || 0} onChange={e => setFormData({...formData, stock: Number(e.target.value)})} style={{ padding: '0.4rem' }} />
+                  </div>
+                  <div style={{ flex: '1 1 120px' }}>
+                    <label style={{ display: 'block', fontSize: '0.8rem', marginBottom: '0.3rem', color: 'var(--color-text-muted)' }}>Stock Mínimo (Alerta)</label>
+                    <input type="number" className="form-control" value={formData.minStock || 5} onChange={e => setFormData({...formData, minStock: Number(e.target.value)})} style={{ padding: '0.4rem' }} />
+                  </div>
+                </div>
+              </div>
+
               {/* Pricing Section */}
               <div style={{ border: '1px solid var(--color-border)', padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-alt)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
@@ -503,6 +526,9 @@ export const AdminCatalog: React.FC = () => {
                   ) : (
                     <span>${product.costPrice || 0}</span>
                   )}
+                  <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: (product.stock || 0) < (product.minStock || 5) ? '#ef4444' : 'var(--color-text)' }}>
+                    Stock: {product.stock || 0}
+                  </div>
                 </td>
                 
                 <td style={{ padding: '1rem' }}>

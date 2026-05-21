@@ -1,19 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Settings2 } from 'lucide-react';
+import { Send, Settings2, CheckCircle, XCircle } from 'lucide-react';
 import { db } from '../../firebase';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+interface ProposedAction {
+  tipo: string;
+  coleccion: string;
+  docId: string;
+  datosActualizar: Record<string, any>;
+  resumenConfirmacion: string;
+}
+
 interface Message {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
+  proposedAction?: ProposedAction;
+  actionStatus?: 'pending' | 'confirmed' | 'cancelled';
 }
 
 export const AIAssistant: React.FC = () => {
   const apiKey = import.meta.env.VITE_AI_API_KEY;
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: apiKey 
-        ? '¡Hola! Soy tu Asistente de Negocio IA. Estoy conectado a tus datos y a la API de Gemini.'
+        ? '¡Hola! Soy tu Asistente de Negocio IA. Estoy a tu disposición para brindarte información de ventas, inventario y modificar datos si me lo solicitas. ¿En qué te puedo ayudar hoy?'
         : '¡Hola! Soy tu Asistente de Negocio IA. (Nota: Modo de demostración activo hasta configurar API Key).' }
   ]);
   const [input, setInput] = useState('');
@@ -24,57 +34,13 @@ export const AIAssistant: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const fetchBusinessData = async (intent: string) => {
-    try {
-      if (intent === 'pedidos_pendientes') {
-        const q = query(collection(db, 'orders'), where('status', '==', 'pending'));
-        const snap = await getDocs(q);
-        return `Actualmente tienes ${snap.size} pedidos pendientes.`;
-      }
-      if (intent === 'stock_insumos') {
-        const snap = await getDocs(collection(db, 'materials'));
-        const lowStock = snap.docs.filter(doc => doc.data().stock < 10);
-        if (lowStock.length > 0) {
-          const items = lowStock.map(d => `${d.data().name} (${d.data().stock} restantes)`).join(', ');
-          return `Tienes poco stock en los siguientes insumos: ${items}. Te sugiero reponer pronto.`;
-        }
-        return `El stock de todos tus insumos parece estar en niveles saludables (por encima de 10 unidades).`;
-      }
-      if (intent === 'clientes') {
-        const snap = await getDocs(collection(db, 'users'));
-        return `Actualmente tienes ${snap.size} clientes registrados en tu plataforma.`;
-      }
-    } catch (e) {
-      console.error(e);
-      return 'Hubo un error al consultar la base de datos.';
-    }
-    return 'Lo siento, no comprendí bien qué dato necesitas.';
-  };
-
   const processMessage = async (text: string) => {
     setIsTyping(true);
     
     try {
-      const apiKey = import.meta.env.VITE_AI_API_KEY;
-      
       if (!apiKey) {
-        // Fallback to Mock NLP if no API Key is provided
-        const lower = text.toLowerCase();
-        let reply = '';
-        if (lower.includes('pedido') && (lower.includes('pendiente') || lower.includes('cuanto') || lower.includes('hay'))) {
-          reply = await fetchBusinessData('pedidos_pendientes');
-        } else if (lower.includes('stock') || lower.includes('insumo') || lower.includes('falta') || lower.includes('material')) {
-          reply = await fetchBusinessData('stock_insumos');
-        } else if (lower.includes('cliente') || lower.includes('usuario')) {
-          reply = await fetchBusinessData('clientes');
-        } else if (lower.includes('cambiar') || lower.includes('editar') || lower.includes('actualizar')) {
-          reply = 'Para modificar datos necesitarás integrar tu API Key de IA en el archivo .env. Por ahora, debes hacerlo manualmente en el panel.';
-        } else {
-          reply = 'No tienes la API Key configurada. Solo puedo responder de forma limitada sobre "pedidos pendientes", "stock" o "clientes".';
-        }
-        
         setTimeout(() => {
-          setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+          setMessages(prev => [...prev, { role: 'assistant', content: 'No tienes la API Key configurada. Por favor configúrala para usar esta función.' }]);
           setIsTyping(false);
         }, 1000);
         return;
@@ -82,45 +48,83 @@ export const AIAssistant: React.FC = () => {
 
       // 1. Fetch Context from Firestore
       const ordersSnap = await getDocs(collection(db, 'orders'));
-      const pendingOrders = ordersSnap.docs.filter(d => d.data().status === 'pending').length;
+      const ordersInfo = ordersSnap.docs.filter(d => d.data().status !== 'completed' && d.data().status !== 'cancelled').map(d => {
+        const data = d.data();
+        return `ID: ${d.id}, Cliente: ${data.customerName || 'N/A'}, Estado actual: ${data.status}`;
+      }).join('; ');
       
       const materialsSnap = await getDocs(collection(db, 'materials'));
-      const materials = materialsSnap.docs.map(d => `${d.data().name}: ${d.data().stock} ${d.data().unit}`).join(', ');
+      const materialsInfo = materialsSnap.docs.map(d => {
+        const data = d.data();
+        return `ID: ${d.id}, Nombre: ${data.name}, Stock actual: ${data.stock}, Stock mínimo (alerta): ${data.minStock || 10}`;
+      }).join('; ');
       
-      const usersSnap = await getDocs(collection(db, 'users'));
-      const totalClients = usersSnap.size;
+      const productsSnap = await getDocs(collection(db, 'products'));
+      const productsInfo = productsSnap.docs.map(d => {
+        const data = d.data();
+        return `ID: ${d.id}, Nombre: ${data.name}, Stock actual: ${data.stock || 0}, Stock mínimo (alerta): ${data.minStock || 5}`;
+      }).join('; ');
 
       // 2. Prepare Prompt for Gemini
       const systemContext = `
       Eres el Asistente de Negocio IA del sistema ERP "Estrella del Oriente".
       
-      Contexto actual de tu base de datos:
-      - Pedidos Pendientes actuales: ${pendingOrders}
-      - Total de Clientes Registrados: ${totalClients}
-      - Inventario de Insumos: ${materials || 'Sin insumos registrados'}
+      Reglas OBLIGATORIAS:
+      1. Responde SIEMPRE de forma extremadamente educada, formal (tratando de "usted") y servicial.
+      2. NUNCA uses caracteres especiales como asteriscos (*), numerales (#), emojis, o formato markdown. Responde solo con texto plano natural.
+      3. DEBES devolver SIEMPRE un objeto JSON válido, no texto suelto.
+      4. Revisa los datos para detectar faltantes de stock basándote en que el "Stock actual" sea menor al "Stock mínimo".
       
-      Responde a la pregunta del dueño de manera concisa, útil y profesional basándote en los datos anteriores.
+      Datos en la base de datos (copia estos IDs si vas a modificar algo):
+      PEDIDOS PENDIENTES O EN PROCESO: [ ${ordersInfo || 'Ninguno'} ]
+      INSUMOS: [ ${materialsInfo || 'Ninguno'} ]
+      PRODUCTOS: [ ${productsInfo || 'Ninguno'} ]
       
-      Pregunta del dueño: ${text}
+      El usuario ha dicho: "${text}"
+      
+      Estructura de tu respuesta JSON:
+      {
+        "respuesta": "Tu mensaje para el usuario en texto plano y educado.",
+        "accionPropuesta": null // Usar null si solo respondes una pregunta.
+      }
+      
+      Si el usuario te pide MODIFICAR, ACTUALIZAR, ELIMINAR, o CAMBIAR algo (ej: sumar stock, marcar pedido como enviado), "accionPropuesta" debe ser:
+      {
+        "tipo": "UPDATE_DOC",
+        "coleccion": "orders" | "materials" | "products",
+        "docId": "ID exacto del documento que sacaste de los datos",
+        "datosActualizar": { ... }, // Los campos y sus valores FINALES a guardar. Ej: {"status": "shipped"} o {"stock": 150}
+        "resumenConfirmacion": "Breve frase de lo que vas a hacer (ej. 'Cambiar estado del pedido a Enviado' o 'Actualizar stock de Manzanilla a 150')"
+      }
       `;
 
       // 3. Call Gemini API
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-      const result = await model.generateContent(systemContext);
-      const reply = result.response.text();
-
-      setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: systemContext }] }],
+        generationConfig: {
+          responseMimeType: "application/json"
+        }
+      });
+      const responseText = result.response.text();
+      
+      const parsed = JSON.parse(responseText);
+      
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: parsed.respuesta,
+        proposedAction: parsed.accionPropuesta,
+        actionStatus: parsed.accionPropuesta ? 'pending' : undefined
+      }]);
       
     } catch (error: any) {
       console.error("AI Assistant Error:", error);
       let errorMsg = 'Hubo un error desconocido.';
       if (error instanceof Error) {
         errorMsg = error.message;
-      } else if (typeof error === 'string') {
-        errorMsg = error;
       }
-      setMessages(prev => [...prev, { role: 'assistant', content: `Hubo un error al procesar tu consulta. Detalles técnicos: ${errorMsg}` }]);
+      setMessages(prev => [...prev, { role: 'system', content: `Hubo un error de conexión con la IA. Por favor, reintente más tarde.` }]);
     } finally {
       setIsTyping(false);
     }
@@ -137,6 +141,34 @@ export const AIAssistant: React.FC = () => {
     await processMessage(userMsg);
   };
 
+  const handleConfirmAction = async (msgIndex: number, action: ProposedAction) => {
+    try {
+      if (action.tipo === 'UPDATE_DOC') {
+        const docRef = doc(db, action.coleccion, action.docId);
+        await updateDoc(docRef, action.datosActualizar);
+      }
+      
+      setMessages(prev => {
+        const newMsg = [...prev];
+        newMsg[msgIndex] = { ...newMsg[msgIndex], actionStatus: 'confirmed' };
+        newMsg.push({ role: 'system', content: `✅ Acción ejecutada con éxito en la base de datos.` });
+        return newMsg;
+      });
+    } catch (error) {
+      console.error("Error executing action:", error);
+      setMessages(prev => [...prev, { role: 'system', content: `❌ Error al ejecutar la acción. Verifique los permisos o el ID.` }]);
+    }
+  };
+
+  const handleCancelAction = (msgIndex: number) => {
+    setMessages(prev => {
+      const newMsg = [...prev];
+      newMsg[msgIndex] = { ...newMsg[msgIndex], actionStatus: 'cancelled' };
+      newMsg.push({ role: 'system', content: `Acción cancelada por el usuario.` });
+      return newMsg;
+    });
+  };
+
   return (
     <div className="ai-chat-inline glass-panel" style={{
       width: '100%',
@@ -148,97 +180,125 @@ export const AIAssistant: React.FC = () => {
       border: '1px solid var(--color-border)'
     }}>
       {/* Header */}
-          <div style={{
-            padding: '1rem',
-            backgroundColor: 'var(--color-bg-alt)',
-            borderBottom: '1px solid var(--color-border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ background: 'var(--color-primary)', padding: '0.3rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <img src="/logo-transparent.png" alt="Bot" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
-              </div>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', fontFamily: 'var(--font-heading)' }}>Asistente de Negocio</h3>
-            </div>
-            <button className="icon-btn" title="Configurar API Key (Próximamente)"><Settings2 size={18}/></button>
+      <div style={{
+        padding: '1rem',
+        backgroundColor: 'var(--color-bg-alt)',
+        borderBottom: '1px solid var(--color-border)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ background: 'var(--color-primary)', padding: '0.3rem', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: '1.2rem' }}>✨</span>
           </div>
+          <h3 style={{ margin: 0, fontSize: '1.1rem', fontFamily: 'var(--font-heading)' }}>Asistente de Negocio Inteligente</h3>
+        </div>
+      </div>
 
-          {/* Messages */}
-          <div style={{
-            flex: 1,
-            padding: '1rem',
-            overflowY: 'auto',
+      {/* Messages */}
+      <div style={{
+        flex: 1,
+        padding: '1rem',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem'
+      }}>
+        {messages.map((msg, idx) => (
+          <div key={idx} style={{
+            alignSelf: msg.role === 'user' ? 'flex-end' : (msg.role === 'system' ? 'center' : 'flex-start'),
+            maxWidth: msg.role === 'system' ? '90%' : '85%',
+            backgroundColor: msg.role === 'user' ? 'var(--color-primary)' : (msg.role === 'system' ? 'transparent' : 'var(--color-bg)'),
+            color: msg.role === 'user' ? 'white' : (msg.role === 'system' ? 'var(--color-text-muted)' : 'var(--color-text)'),
+            padding: msg.role === 'system' ? '0.5rem' : '0.8rem 1rem',
+            borderRadius: msg.role === 'user' ? '18px 18px 0 18px' : '18px 18px 18px 0',
+            border: msg.role === 'assistant' ? '1px solid var(--color-border)' : 'none',
+            fontSize: msg.role === 'system' ? '0.8rem' : '0.9rem',
+            lineHeight: 1.4,
             display: 'flex',
             flexDirection: 'column',
-            gap: '1rem'
+            gap: '0.8rem'
           }}>
-            {messages.map((msg, idx) => (
-              <div key={idx} style={{
-                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: '85%',
-                backgroundColor: msg.role === 'user' ? 'var(--color-primary)' : 'var(--color-bg)',
-                color: msg.role === 'user' ? 'white' : 'var(--color-text)',
-                padding: '0.8rem 1rem',
-                borderRadius: msg.role === 'user' ? '18px 18px 0 18px' : '18px 18px 18px 0',
-                border: msg.role === 'assistant' ? '1px solid var(--color-border)' : 'none',
-                fontSize: '0.9rem',
-                lineHeight: 1.4
-              }}>
-                {msg.content}
-              </div>
-            ))}
-            {isTyping && (
-              <div style={{ alignSelf: 'flex-start', backgroundColor: 'var(--color-bg)', padding: '0.8rem 1rem', borderRadius: '18px 18px 18px 0', border: '1px solid var(--color-border)' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Pensando...</span>
+            <div>{msg.content}</div>
+            
+            {msg.proposedAction && msg.actionStatus === 'pending' && (
+              <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-primary)', borderRadius: '8px', padding: '1rem', marginTop: '0.5rem' }}>
+                <strong style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--color-primary)' }}>Acción Propuesta:</strong>
+                <p style={{ margin: '0 0 1rem 0' }}>{msg.proposedAction.resumenConfirmacion}</p>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => handleConfirmAction(idx, msg.proposedAction!)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                    <CheckCircle size={16} /> Confirmar
+                  </button>
+                  <button onClick={() => handleCancelAction(idx)} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.5rem', background: 'transparent', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: '4px', cursor: 'pointer' }}>
+                    <XCircle size={16} /> Cancelar
+                  </button>
+                </div>
               </div>
             )}
-            <div ref={messagesEndRef} />
+            
+            {msg.proposedAction && msg.actionStatus === 'confirmed' && (
+              <div style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <CheckCircle size={14} /> Acción confirmada y ejecutada
+              </div>
+            )}
+            {msg.proposedAction && msg.actionStatus === 'cancelled' && (
+              <div style={{ fontSize: '0.8rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <XCircle size={14} /> Acción cancelada
+              </div>
+            )}
           </div>
+        ))}
+        {isTyping && (
+          <div style={{ alignSelf: 'flex-start', backgroundColor: 'var(--color-bg)', padding: '0.8rem 1rem', borderRadius: '18px 18px 18px 0', border: '1px solid var(--color-border)' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>Procesando solicitud...</span>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
+      </div>
 
-          {/* Input Area */}
-          <form onSubmit={handleSend} style={{
-            padding: '1rem',
-            borderTop: '1px solid var(--color-border)',
+      {/* Input Area */}
+      <form onSubmit={handleSend} style={{
+        padding: '1rem',
+        borderTop: '1px solid var(--color-border)',
+        display: 'flex',
+        gap: '0.5rem',
+        backgroundColor: 'var(--color-bg-alt)'
+      }}>
+        <input 
+          type="text" 
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Ej: Cambiar el pedido de Juan a estado Enviado..."
+          style={{
+            flex: 1,
+            padding: '0.8rem 1rem',
+            borderRadius: '20px',
+            border: '1px solid var(--color-border)',
+            backgroundColor: 'var(--color-surface)',
+            color: 'var(--color-text)',
+            outline: 'none'
+          }}
+        />
+        <button 
+          type="submit"
+          disabled={!input.trim() || isTyping}
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            backgroundColor: input.trim() && !isTyping ? 'var(--color-primary)' : 'var(--color-bg)',
+            color: input.trim() && !isTyping ? 'white' : 'var(--color-text-muted)',
+            border: 'none',
             display: 'flex',
-            gap: '0.5rem',
-            backgroundColor: 'var(--color-bg-alt)'
-          }}>
-            <input 
-              type="text" 
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Pregúntame algo..."
-              style={{
-                flex: 1,
-                padding: '0.8rem 1rem',
-                borderRadius: '20px',
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'var(--color-surface)',
-                color: 'var(--color-text)',
-                outline: 'none'
-              }}
-            />
-            <button 
-              type="submit"
-              disabled={!input.trim() || isTyping}
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                backgroundColor: input.trim() && !isTyping ? 'var(--color-primary)' : 'var(--color-bg)',
-                color: input.trim() && !isTyping ? 'white' : 'var(--color-text-muted)',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: input.trim() && !isTyping ? 'pointer' : 'default',
-                transition: 'all 0.2s'
-              }}
-            >
-              <Send size={18} style={{ marginLeft: '2px' }} />
-            </button>
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: input.trim() && !isTyping ? 'pointer' : 'default',
+            transition: 'all 0.2s'
+          }}
+        >
+          <Send size={18} style={{ marginLeft: '2px' }} />
+        </button>
       </form>
     </div>
   );
