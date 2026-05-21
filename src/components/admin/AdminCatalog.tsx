@@ -351,7 +351,6 @@ export const AdminCatalog: React.FC = () => {
                 </div>
               </div>
 
-              </div>
 
               {/* Inventory Section */}
               <div style={{ border: '1px solid var(--color-border)', padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-alt)' }}>

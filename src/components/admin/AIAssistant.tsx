@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Settings2, CheckCircle, XCircle } from 'lucide-react';
+import { Send, CheckCircle, XCircle } from 'lucide-react';
 import { db } from '../../firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -124,7 +124,7 @@ export const AIAssistant: React.FC = () => {
       if (error instanceof Error) {
         errorMsg = error.message;
       }
-      setMessages(prev => [...prev, { role: 'system', content: `Hubo un error de conexión con la IA. Por favor, reintente más tarde.` }]);
+      setMessages(prev => [...prev, { role: 'system', content: `Hubo un error de conexión con la IA. Detalles: ${errorMsg}` }]);
     } finally {
       setIsTyping(false);
     }
