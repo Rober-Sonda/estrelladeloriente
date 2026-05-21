@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../AuthContext';
 import { db } from '../firebase';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, deleteDoc, onSnapshot } from 'firebase/firestore';
 import { Package, XCircle, AlertCircle, Clock, CheckCircle, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '../ToastContext';
 import { useCart } from '../CartContext';
@@ -42,24 +42,7 @@ export const MyOrders: React.FC = () => {
     return () => unsubscribe();
   }, [user]);
 
-  const handleCancelOrder = async (orderId: string) => {
-    setConfirmDialog({
-      title: "Cancelar Pedido",
-      message: "¿Estás seguro de que deseas cancelar este pedido?",
-      onConfirm: async () => {
-        try {
-          await updateDoc(doc(db, 'orders', orderId), {
-            status: 'cancelled',
-            updatedAt: new Date().toISOString()
-          });
-          showToast('Pedido cancelado exitosamente', 'success');
-        } catch (error) {
-          console.error("Error cancelling order:", error);
-          showToast('Hubo un error al cancelar el pedido', 'error');
-        }
-      }
-    });
-  };
+
 
   const handleDeleteOrder = async (orderId: string) => {
     setConfirmDialog({

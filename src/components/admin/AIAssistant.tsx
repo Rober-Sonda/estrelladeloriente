@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, Send, X, Settings2 } from 'lucide-react';
+import { Send, Settings2 } from 'lucide-react';
 import { db } from '../../firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { GoogleGenerativeAI } from '@google/generative-ai';
