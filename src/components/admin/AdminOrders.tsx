@@ -399,6 +399,7 @@ export const AdminOrders: React.FC = () => {
         <option value="processing">Filtro: Procesando</option>
         <option value="shipped">Filtro: Enviados</option>
         <option value="delivered">Filtro: Entregados</option>
+        <option value="cancelled">Filtro: Cancelados</option>
         <option value="claims">Filtro: Reclamos</option>
       </select>
 
@@ -408,6 +409,7 @@ export const AdminOrders: React.FC = () => {
         <button onClick={() => setFilter('processing')} className={`btn ${filter === 'processing' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.4rem 1rem', fontSize: '0.9rem', flexShrink: 0 }}>Procesando</button>
         <button onClick={() => setFilter('shipped')} className={`btn ${filter === 'shipped' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.4rem 1rem', fontSize: '0.9rem', flexShrink: 0 }}>Enviados</button>
         <button onClick={() => setFilter('delivered')} className={`btn ${filter === 'delivered' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.4rem 1rem', fontSize: '0.9rem', flexShrink: 0 }}>Entregados</button>
+        <button onClick={() => setFilter('cancelled')} className={`btn ${filter === 'cancelled' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.4rem 1rem', fontSize: '0.9rem', flexShrink: 0 }}>Cancelados</button>
         <button onClick={() => setFilter('claims')} className={`btn ${filter === 'claims' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '0.4rem 1rem', fontSize: '0.9rem', flexShrink: 0, background: filter === 'claims' ? '#ef4444' : 'transparent', color: filter === 'claims' ? 'white' : '#ef4444', borderColor: '#ef4444' }}>
           <MessageCircle size={16} style={{ marginRight: '0.3rem' }} /> Reclamos
         </button>
