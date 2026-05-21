@@ -135,7 +135,7 @@ export const AdminDashboard: React.FC = () => {
                 onClick={() => setActiveTab('assistant')}
                 className={`admin-nav-btn ${activeTab === 'assistant' ? 'active' : ''}`}
               >
-                <img src="/logo-transparent.png" alt="Bot" className="admin-nav-icon" /> Asistente IA
+                Asistente IA
               </button>
             </li>
             <li>
