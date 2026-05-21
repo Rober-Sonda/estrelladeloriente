@@ -73,12 +73,17 @@ export const AIAssistant: React.FC = () => {
       1. Responde SIEMPRE de forma extremadamente educada, formal (tratando de "usted") y servicial.
       2. NUNCA uses caracteres especiales como asteriscos (*), numerales (#), emojis, o formato markdown. Responde solo con texto plano natural.
       3. DEBES devolver SIEMPRE un objeto JSON válido, no texto suelto.
-      4. Revisa los datos para detectar faltantes de stock basándote en que el "Stock actual" sea menor al "Stock mínimo".
       
       Datos en la base de datos (copia estos IDs si vas a modificar algo):
       PEDIDOS PENDIENTES O EN PROCESO: [ ${ordersInfo || 'Ninguno'} ]
       INSUMOS: [ ${materialsInfo || 'Ninguno'} ]
       PRODUCTOS: [ ${productsInfo || 'Ninguno'} ]
+      
+      Esquemas para CREAR nuevos registros (usa estos campos obligatoriamente):
+      - orders (pedidos): { "customerName": "...", "customerEmail": "...", "status": "pending", "total": 0, "items": [{"productId": "...", "name": "...", "quantity": 1, "price": 0}] }
+      - products (productos): { "name": "...", "description": "...", "price": 0, "stock": 0, "minStock": 5, "image": "/logo-transparent.png", "categories": [] }
+      - materials (insumos): { "name": "...", "unit": "unidades", "stock": 0, "minStock": 10, "cost": 0 }
+      - categories (categorías): { "name": "...", "slug": "...", "subCategories": [] }
       
       El usuario ha dicho: "${text}"
       
@@ -88,13 +93,22 @@ export const AIAssistant: React.FC = () => {
         "accionPropuesta": null // Usar null si solo respondes una pregunta.
       }
       
-      Si el usuario te pide MODIFICAR, ACTUALIZAR, ELIMINAR, o CAMBIAR algo (ej: sumar stock, marcar pedido como enviado), "accionPropuesta" debe ser:
+      Si el usuario te pide MODIFICAR, ACTUALIZAR o ELIMINAR, usa:
       {
         "tipo": "UPDATE_DOC",
-        "coleccion": "orders" | "materials" | "products",
+        "coleccion": "orders" | "materials" | "products" | "categories",
         "docId": "ID exacto del documento que sacaste de los datos",
-        "datosActualizar": { ... }, // Los campos y sus valores FINALES a guardar. Ej: {"status": "shipped"} o {"stock": 150}
-        "resumenConfirmacion": "Breve frase de lo que vas a hacer (ej. 'Cambiar estado del pedido a Enviado' o 'Actualizar stock de Manzanilla a 150')"
+        "datosActualizar": { ... }, // Campos FINALES a guardar
+        "resumenConfirmacion": "Breve frase (ej. 'Cambiar estado del pedido a Enviado')"
+      }
+      
+      Si el usuario te pide CREAR o AGREGAR (un pedido nuevo, producto, insumo, etc), usa:
+      {
+        "tipo": "CREATE_DOC",
+        "coleccion": "orders" | "materials" | "products" | "categories",
+        "docId": "nuevo",
+        "datosActualizar": { ... }, // Los campos respetando el esquema mencionado arriba
+        "resumenConfirmacion": "Breve frase (ej. 'Crear nuevo pedido para Juan Pérez')"
       }
       `;
 
@@ -146,6 +160,12 @@ export const AIAssistant: React.FC = () => {
       if (action.tipo === 'UPDATE_DOC') {
         const docRef = doc(db, action.coleccion, action.docId);
         await updateDoc(docRef, action.datosActualizar);
+      } else if (action.tipo === 'CREATE_DOC') {
+        const { addDoc, collection } = await import('firebase/firestore');
+        await addDoc(collection(db, action.coleccion), {
+          ...action.datosActualizar,
+          createdAt: new Date().toISOString()
+        });
       }
       
       setMessages(prev => {
