@@ -303,7 +303,7 @@ img {
   box-shadow: 0 0 0 3px rgba(197, 168, 128, 0.2);
 }
 
-.theme-dark .form-control {
+[data-theme='dark'] .form-control {
   background: rgba(0, 0, 0, 0.2);
 }
 

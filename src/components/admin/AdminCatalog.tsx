@@ -346,7 +346,7 @@ export const AdminCatalog: React.FC = () => {
               </div>
 
               {/* Pricing Section */}
-              <div style={{ border: '1px solid var(--color-border)', padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.2)' }}>
+              <div style={{ border: '1px solid var(--color-border)', padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-alt)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h4 style={{ margin: 0, color: 'var(--color-primary)' }}>Precios y Presentaciones</h4>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.9rem' }}>
@@ -391,7 +391,7 @@ export const AdminCatalog: React.FC = () => {
               </div>
 
               {/* Bill of Materials Section */}
-              <div style={{ border: '1px solid var(--color-border)', padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.2)' }}>
+              <div style={{ border: '1px solid var(--color-border)', padding: '1rem', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-alt)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h4 style={{ margin: 0, color: 'var(--color-primary)' }}>Insumos Asociados (BOM)</h4>
                 </div>

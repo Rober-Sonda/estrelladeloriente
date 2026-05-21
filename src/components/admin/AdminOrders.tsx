@@ -339,7 +339,7 @@ export const AdminOrders: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ background: 'rgba(255, 255, 255, 0.4)', padding: '1.5rem', borderRadius: 'var(--radius-md)', marginBottom: '2rem', border: '1px solid rgba(197, 168, 128, 0.15)' }}>
+            <div style={{ background: 'var(--color-bg-alt)', padding: '1.5rem', borderRadius: 'var(--radius-md)', marginBottom: '2rem', border: '1px solid rgba(197, 168, 128, 0.15)' }}>
               <h4 style={{ margin: '0 0 1.5rem 0', fontFamily: 'var(--font-heading)', color: 'var(--color-text)' }}>Agregar Productos</h4>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                 <div style={{ flex: 2, minWidth: '200px' }}>
