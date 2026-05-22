@@ -222,6 +222,15 @@ export const AdminCatalog: React.FC = () => {
   const updateBomItem = (index: number, field: string, value: any) => {
     const updatedBom = [...(formData.billOfMaterials || [])];
     updatedBom[index] = { ...updatedBom[index], [field]: value };
+    
+    if (field === 'materialId') {
+      const selectedMat = materials.find(m => m.id === value);
+      if (selectedMat) {
+        updatedBom[index].materialName = selectedMat.name;
+        updatedBom[index].unit = selectedMat.unit;
+      }
+    }
+    
     setFormData({ ...formData, billOfMaterials: updatedBom });
   };
 

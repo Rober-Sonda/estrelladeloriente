@@ -198,6 +198,19 @@ export const Catalog: React.FC = () => {
               <h3 className="product-title" style={{ marginTop: '0.8rem', fontSize: '1.4rem' }}>{product.name}</h3>
               <p className="product-desc" style={{ fontSize: '0.95rem' }}>{product.description}</p>
               
+              {product.billOfMaterials && product.billOfMaterials.length > 0 && (
+                <div style={{ marginTop: '0.5rem', marginBottom: '1rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                  <strong style={{ color: 'var(--color-text)' }}>Composición: </strong>
+                  {product.billOfMaterials.map((bom, idx) => (
+                    <span key={idx}>
+                      {bom.materialName ? bom.materialName : 'Ingrediente'} 
+                      {bom.quantity > 0 && ` (${bom.quantity}${bom.unit ? ' ' + bom.unit : ''})`}
+                      {idx < product.billOfMaterials!.length - 1 ? ', ' : ''}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
               <div className="product-footer">
                 
                 {product.hasVariations && product.variations && product.variations.length > 0 ? (

@@ -168,6 +168,19 @@ export const MyOrders: React.FC = () => {
                         <div style={{ flex: 1 }}>
                           <h5 style={{ margin: '0 0 0.2rem 0', fontSize: '1rem', color: 'var(--color-text)' }}>{item.name}</h5>
                           <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>Cantidad: {item.quantity} × ${item.price.toLocaleString('es-AR')}</span>
+                          
+                          {item.billOfMaterials && item.billOfMaterials.length > 0 && (
+                            <div style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                              <strong style={{ color: 'var(--color-text)' }}>Composición: </strong>
+                              {item.billOfMaterials.map((bom: any, bIdx: number) => (
+                                <span key={bIdx}>
+                                  {bom.materialName ? bom.materialName : 'Ingrediente'} 
+                                  {bom.quantity > 0 && ` (${bom.quantity}${bom.unit ? ' ' + bom.unit : ''})`}
+                                  {bIdx < item.billOfMaterials.length - 1 ? ', ' : ''}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <div style={{ fontWeight: 'bold', color: 'var(--color-primary)', fontSize: '1.1rem' }}>
                           ${(item.price * item.quantity).toLocaleString('es-AR')}

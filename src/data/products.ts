@@ -11,6 +11,8 @@ export interface ProductVariation {
 export interface BillOfMaterialItem {
   materialId: string;
   quantity: number;
+  materialName?: string;
+  unit?: string;
 }
 
 export interface Product {
